@@ -1,0 +1,115 @@
+@use "../../theme/scss/root.scss";
+
+header {
+  width: 100%;
+  position: relative;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: #fff;
+}
+
+.navbar {
+  width: 100%;
+  height: 45px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center; /* Align content vertically */
+  justify-content: flex-start; /* Ensure the content is spread out */
+  margin-bottom: 5px;
+  font-weight: bold;
+
+  @media (max-width: 1200px) {
+    padding: 0 10px;
+    justify-content: space-around; /* Adjust layout for smaller screens */
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column; /* Stack items vertically for mobile */
+    height: auto; /* Allow navbar height to adjust */
+  }
+}
+
+.navbar2 {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #a9a8a8;
+  font-weight: bold;
+  overflow-x: auto; /* Allow horizontal scrolling on small screens */
+  white-space: nowrap; /* Prevent text wrapping */
+  padding: 5px 0;
+
+  @media (max-width: 1200px) {
+    justify-content: space-around;
+  }
+
+  @media (max-width: 768px) {
+    flex-wrap: wrap; /* Stack sub-nav items on smaller screens */
+  }
+}
+
+.sub-nav {
+  list-style-type: none;
+  padding: 0;
+  margin-left: 35px;
+
+  @media (max-width: 768px) {
+    margin-left: 0; /* Adjust margin for smaller screens */
+  }
+}
+
+.li-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.li-items a.active {
+  font-size: 14px;
+}
+
+.nav-link {
+  display: block;
+  padding: 10px 15px;
+  text-transform: capitalize !important;
+  color: #333;
+  text-decoration: none;
+  transition: color 0.3s ease-in-out;
+  font-size: 14px;
+
+  @media (max-width: 768px) {
+    padding: 10px 10px; /* Adjust padding for smaller screens */
+  }
+}
+
+.nav-link:hover {
+  background-color: #f8f9fa;
+  color: #007bff;
+}
+
+.li-items.selected .nav-link {
+  background-color: #3271b5;
+  color: #fff;
+  border-radius: 4px;
+}
+
+.sub-li-items {
+  display: inline-block; /* Ensure sub-menu items are in one row */
+  // padding: 10px;
+
+  @media (max-width: 768px) {
+    padding: 10px 5px; /* Adjust padding for smaller screens */
+  }
+}
+
+.sub-li-items button,
+.sub-li-items .nav-link {
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  @media (max-width: 768px) {
+    font-size: 10px; /* Reduce font size for smaller screens */
+  }
+}

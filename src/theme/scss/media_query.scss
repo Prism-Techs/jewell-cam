@@ -1,0 +1,69 @@
+$breakpoint-xsmall: 414px;
+$breakpoint-small: 576px;
+$breakpoint-medium: 768px;
+$breakpoint-large: 1074px;
+$breakpoint-extra-large: 1300px;
+
+@mixin min-width($breakpoint) {
+    @if $breakpoint == xsmall {
+        @media (min-width: $breakpoint-xsmall) {
+            @content;
+        }
+    } @else if $breakpoint == small {
+        @media (min-width: $breakpoint-small) {
+            @content;
+        }
+    } @else if $breakpoint == medium {
+        @media (min-width: $breakpoint-medium) {
+            @content;
+        }
+    } @else if $breakpoint == large {
+        @media (min-width: $breakpoint-large) {
+            @content;
+        }
+    } @else if $breakpoint == xlarge {
+        @media (min-width: $breakpoint-extra-large) {
+            @content;
+        }
+    } @else {
+        @error "UNKNOWN MEDIA BREAKPOINT #$breakpoint";
+    }
+}
+
+@mixin max-width($breakpoint) {
+    @if $breakpoint == xsmall {
+        @media (max-width: $breakpoint-xsmall) {
+            @content;
+        }
+    } @else if $breakpoint == small {
+        @media (max-width: $breakpoint-small) {
+            @content;
+        }
+    } @else if $breakpoint == medium {
+        @media (max-width: $breakpoint-medium) {
+            @content;
+        }
+    } @else if $breakpoint == large {
+        @media (max-width: $breakpoint-large) {
+            @content;
+        }
+    } @else if $breakpoint == xlarge {
+        @media (max-width: $breakpoint-extra-large) {
+            @content;
+        }
+    } @else {
+        @error "UNKNOWN MEDIA BREAKPOINT #$breakpoint";
+    }
+}
+
+@mixin max-px($px) {
+    @media (max-width: $px) {
+        @content;
+    }
+}
+
+@mixin min-px($px) {
+    @media (min-width: $px) {
+        @content;
+    }
+}

@@ -1,115 +1,214 @@
 @use "../../theme/scss/root.scss";
 
 header {
-  width: 100%;
-  position: relative;
+  position: sticky;
   top: 0;
-  left: 0;
   right: 0;
-  background-color: #fff;
+  left: 0;
+  z-index: 999;
 }
 
 .navbar {
   width: 100%;
-  height: 45px;
-  padding: 0 10px;
+  background-color: #fff;
+  height: 50px;
+  padding: 0px 10px;
+  margin: auto;
   display: flex;
-  align-items: center; /* Align content vertically */
-  justify-content: flex-start; /* Ensure the content is spread out */
-  margin-bottom: 5px;
-  font-weight: bold;
-
+  // margin-bottom: 5px;
+  justify-content: space-between;
   @media (max-width: 1200px) {
-    padding: 0 10px;
-    justify-content: space-around; /* Adjust layout for smaller screens */
-  }
-
-  @media (max-width: 768px) {
-    flex-direction: column; /* Stack items vertically for mobile */
-    height: auto; /* Allow navbar height to adjust */
+    padding: 0px 10px;
   }
 }
 
-.navbar2 {
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid #a9a8a8;
+a {
+  text-decoration: none;
+  font-size: 15px;
+  // color: root.$primary-color;
+  color: #000;
   font-weight: bold;
-  overflow-x: auto; /* Allow horizontal scrolling on small screens */
-  white-space: nowrap; /* Prevent text wrapping */
-  padding: 5px 0;
-
-  @media (max-width: 1200px) {
-    justify-content: space-around;
-  }
-
-  @media (max-width: 768px) {
-    flex-wrap: wrap; /* Stack sub-nav items on smaller screens */
-  }
 }
 
-.sub-nav {
-  list-style-type: none;
-  padding: 0;
-  margin-left: 35px;
+.company-name {
+  font-size: 22px;
+}
 
-  @media (max-width: 768px) {
-    margin-left: 0; /* Adjust margin for smaller screens */
-  }
+// .active {
+//     color: #0d6efd;
+// }
+
+.navbar .nav-links-container {
+  display: flex;
+  gap: 2rem;
+  margin: auto;
+}
+
+.account_icon {
+  font-size: 31px !important;
+}
+
+.user-icon {
+  font-size: 18px;
+}
+
+.css-6hp17o-MuiList-root-MuiMenu-list {
+  font-family: root.$global-font;
 }
 
 .li-items {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 5px;
+  position: relative; /* To make the submenu appear relative to the parent */
 }
 
 .li-items a.active {
-  font-size: 14px;
+  // color: root.$dark-primary-color;
+  font-size: 16px;
 }
 
+/* Style the main navigation link */
 .nav-link {
   display: block;
-  padding: 10px 15px;
+  padding: 5px 5px;
   text-transform: capitalize !important;
+  font-weight: bold;
   color: #333;
   text-decoration: none;
   transition: color 0.3s ease-in-out;
-  font-size: 14px;
-
-  @media (max-width: 768px) {
-    padding: 10px 10px; /* Adjust padding for smaller screens */
-  }
+  font-size: 16px;
 }
 
-.nav-link:hover {
-  background-color: #f8f9fa;
-  color: #007bff;
+/* Apply hover effect to the main navigation link */
+// .li-items:hover .nav-link {
+//     color: root.$dark-primary-color;
+// }
+
+/* Style the submenu container */
+.sub-menu {
+  position: fixed;
+  z-index: 999999 !important;
+  display: none;
+  /* margin-top: 10px; */
+  // z-index: 99;
+  list-style: none;
+  border-radius: 10px;
+  width: 200px;
+  background-color: root.$white;
+  // background-color: rgb(177, 96, 96);
+  box-shadow: 10px 10px 50px rgb(0 0 0/5%);
+  padding: 0px 0px 0px 5px;
 }
 
-.li-items.selected .nav-link {
-  background-color: #3271b5;
-  color: #fff;
-  border-radius: 4px;
+/* Style the submenu items */
+.sub-menu .sub-li-items {
+  // padding: 5px 10px;
+  width: 100%;
+  cursor: pointer;
+  text-align: start;
+}
+
+/* Apply hover effect to submenu items */
+.sub-li-items:hover {
+  background-color: #f5f5f5;
+  border-radius: 10px;
+}
+
+/* Display submenu on hover of parent li */
+.li-items:hover .sub-menu {
+  display: block;
+}
+
+/* only for drawer */
+
+/* Style the submenu container */
+.sub-menu-drawer {
+  position: fixed;
+  z-index: 999999 !important;
+  display: none;
+  border-radius: 0px;
+  /* margin-top: 10px; */
+  margin-left: 230px;
+  // z-index: 99;
+  list-style: none;
+  border-radius: 10px;
+  width: 200px;
+  background-color: root.$white;
+  box-shadow: 10px 10px 50px rgb(0 0 0/5%);
+}
+
+/* Style the submenu items */
+.sub-menu-drawer .sub-li-items-drawer {
+  padding: 5px 10px;
+  width: 100%;
+  cursor: pointer;
+}
+
+/* Apply hover effect to submenu items */
+.sub-li-items-drawer:hover {
+  background-color: #f5f5f5;
+  border-radius: 10px;
+}
+
+/* Display submenu on hover of parent li */
+.li-items-drawer:hover .sub-menu-drawer {
+  display: block;
+}
+
+.css-6hp17o-MuiList-root-MuiMenu-list {
+  width: 350px !important;
+}
+
+.nav-link.active {
+  color: #000;
+  // background: #3e667a;
+  border-radius: 5px;
+}
+
+.sub-sub-li-items {
+  display: none; /* Hide sub-sub-items by default */
+  list-style-type: none;
+  padding: 0px;
 }
 
 .sub-li-items {
-  display: inline-block; /* Ensure sub-menu items are in one row */
-  // padding: 10px;
-
-  @media (max-width: 768px) {
-    padding: 10px 5px; /* Adjust padding for smaller screens */
-  }
+  position: relative; /* Ensure the relative position for absolute positioning */
 }
 
-.sub-li-items button,
-.sub-li-items .nav-link {
-  font-size: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.sub-li-items:hover .sub-sub-li-items {
+  display: block;
+  text-align: start;
+  padding: 10px;
+}
 
-  @media (max-width: 768px) {
-    font-size: 10px; /* Reduce font size for smaller screens */
+/* Positioning the sub-sub-items */
+.submenu {
+  position: absolute;
+  left: 100%; /* Position it to the right of the parent item */
+  top: 0; /* Align with the top of the parent item */
+}
+
+.menu_drawer {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+
+  .menu_item {
+    position: relative;
+
+    .sub_menu_drawer {
+      display: none;
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+      position: absolute;
+      left: 100%;
+      top: 0;
+    }
+
+    &:hover > .sub_menu_drawer {
+      display: block;
+    }
   }
 }

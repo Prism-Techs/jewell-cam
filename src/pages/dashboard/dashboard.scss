@@ -1,69 +1,4 @@
-.dashboard {
-  display: flex;
-  align-items: flex-start; // Align to the start (top)
-  width: 50px; // Full width
-  min-height: 100vh; // Full height of viewport
-  background-color: #f5f6f7;
-  position: relative; // To position child elements
-  // padding: 20px; // Add some padding
-}
-
-.main-div {
-  position: relative;
-  // background-color: #e3e4e5;
-  min-height: 100vh;
-}
-
-.arrow-toggle {
-  display: flex;
-  flex-direction: column; // Stack arrows vertically
-  // margin-right: 10px; // Space between arrows and tools div
-
-  .arrow-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    margin: 5px; // Space between arrows
-    transition: transform 0.3s ease; // Smooth transition for rotation
-  }
-}
-
-.tools-div {
-  margin-left: 10px; // Space between arrows and tools div
-  // border: 1px solid #ddd;
-  padding: 5px;
-  background-color: #ffffff;
-  border-radius: 4px;
-  width: 200px; // Adjust width as needed
-  min-height: 100vh;
-}
-
-.first-div {
-  min-width: 100vh;
-}
-
-// .parameters-div {
-//     display: flex;
-//     align-items: center;
-//     margin-bottom: 5px;
-//     text-align: left;
-// }
-
-// .parameters-div label {
-//     width: 110px;
-//     margin-right: 10px;
-//     font-size: 14px;
-// }
-
-// .parameters-div input {
-//     // flex: 1;
-//     width: 100px !important;
-//     padding: 5px;
-//     font-size: 14px;
-//     border: 1px solid #ccc;
-//     border-radius: 4px;
-// }
-
+@use "../../theme/scss/root.scss";
 .parameters-div {
   display: flex;
   justify-content: center; /* Ensure space between label and input */
@@ -91,60 +26,228 @@
   display: flex;
   justify-content: space-between; /* Ensure space between label and input */
   margin-bottom: 5px;
-  text-align: right;
-  height: 25px;
+  text-align: left;
+  height: 26px;
 }
 
 .parameters-div2 label {
-  width: 160px; /* Keep label width consistent */
-  margin-right: 10px;
+  width: 135px; /* Keep label width consistent */
+  margin-right: 5px;
   font-size: 14px;
 }
 
-/* Make the label column sticky (freezing effect) */
+// /* Make the label column sticky (freezing effect) */
 .label-column {
   position: -webkit-sticky; /* For Safari */
   position: sticky;
   left: 0;
   z-index: 1;
   background-color: #fff; /* To prevent overlapping with dynamic columns */
-  padding-right: 5px; /* Space between the label and input columns */
+  // padding-right: 5px; /* Space between the label and input columns */
   border-right: 1px solid #ddd; /* Optional: Add a border for visual separation */
 }
 
-/* Set scroll properties for dynamic columns */
 .columns-container {
   display: flex;
-  overflow-x: auto; /* Enable horizontal scrolling */
-  padding-left: 15px; /* Give space on the left */
+  flex-wrap: nowrap;  /* Prevents the columns from wrapping onto the next line */
+  overflow-x: auto;   /* Enables horizontal scrolling */
 }
+
+.main-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Take full viewport height */
+  width: 100vw; /* Take full viewport width */
+  
+}
+
+.content {
+  display: flex;
+  flex: 4; /* Takes 4 units of available space */
+  background-color: #bed2e7;
+}
+// .box1 {
+//   background-color: #fff;
+//   display: flex;
+//   flex-direction: column;  /* Arrange the divs in a vertical line */
+//   align-items: center;
+//   // flex: 1; /* Takes 1 unit of available space */
+//   margin: 2px;
+// }
+
+.box1 {
+  display: flex;
+  flex-direction: column;
+  // justify-content: center;
+  align-items: flex-start;
+  background-color: #f0f0f0;
+  padding: 3px;
+  border-right: 2px solid #ccc;
+  // height: 100vh; /* Full height for a sidebar look */
+}
+
+.icon {
+  font-size: 12px;
+  padding: 5px 5px;
+  margin: 10px 0;
+  background-color: #fff;
+  color: #333;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  width: 50px;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.icon:hover {
+  background-color: root.$light-primary-color;
+  color: #000;
+  transform: translateX(5px); /* Slight slide effect */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Optional: Add an active state to highlight selected icon */
+.icon.active {
+  background-color: #005b99;
+  color: white;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
 
 .box2 {
-  width: 100%; /* Ensure it takes the full width */
-  height: 100%; /* Ensure it takes the full height */
-  overflow: hidden; /* Prevent overflow */
-  position: relative; /* Keep the element inside */
+  background-color: #fff;
+  // flex: 1; /* Takes 1 unit of available space */
+  width: 30%;
+  margin: 2px;
+}
+.box3 {
+  // background-color: #fff;
+  // flex: 2; /* Takes 1 unit of available space */
+  margin: 2px;
+  width: 50%;
+  background: #000;
+  display: flex; 
+  flex-direction: column; 
+  color: #fff
+}
+.box4 {
+  background-color: #fff;
+  // flex: 2; /* Takes 1 unit of available space */
+  width: 50%;
+  margin: 2px;
+  //   background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  margin-right: 10px;
+  justify-content: flex-start;
+  overflow-y: auto;
 }
 
-/* For Chrome, Safari, and Edge */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-    -webkit-appearance: none; /* Remove the arrows */
-    margin: 2px; /* Remove margin to prevent layout shift */
+.tabs {
+  list-style: none;  /* Remove default list styling (no dots) */
+  padding: 0;
+  margin: 0;
+  display: flex;  /* Align tabs side by side */
+  gap: 20px;  /* Add some space between tabs */
+  // border-bottom: 2px solid #ddd;  /* Bottom border for the tab bar */
 }
 
-/* For Firefox */
-input[type="number"] {
-    -moz-appearance: textfield; /* Remove the arrows in Firefox */
+.tabs li {
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: root.$fontSize16;
+  position: relative;
+  color: #333;
 }
 
-/* Optional: If you want to remove borders and padding */
-input[type="number"] {
-    // border: none; /* Remove border */    
-    padding: 2px; /* Remove padding */
+.tabs li.active {
+  font-weight: bold;
+  color: #000;
 }
 
-.Button-div{
-    padding: 10px 10px 0px 0px;
-    margin: 0px;
+.tabs li.active::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;  /* Position the underline below the text */
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: rgb(125, 193, 238);  /* Underline color */
+}
+
+.tabs li:hover {
+  color: #555;
+}
+
+.card-section {
+  /* Add any styles you want for the custom card container */
+  // margin-bottom: 10px;
+  // width: 150px;
+  // height: 170px;
+  padding: 5px;
+}
+
+.custom-card-content {
+  /* Add styling for content container if needed */
+}
+
+.custom-typography {
+  font-size: 14px;
+  color: #666;
+  // margin-bottom: 10px;
+  text-align: center;
+}
+
+.image-button {
+  display: block;
+  width: 100%;
+  background: none;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 4px;
+}
+
+.image-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.image-button img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Add small margin to paragraph */
+.text-center p {
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+.text-class{
+  color: root.$yellow;
+  font-size: root.$fontSize16;
+}
+.strong-class{
+  font-size: root.$fontSize16;
+}
+.xy-cord{
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-grow: 1
+}
+.form-div{
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  height: 100%
+}
+.multilayer{
+  background-color: root.$light-primary-color;
+}
+.buttonborder{
+  border: '1px solid transparent';
+  background-color: 'transparent'
 }

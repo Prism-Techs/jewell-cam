@@ -1,329 +1,596 @@
-    import React, { useRef, useState, useEffect } from 'react';
-    import Navbar from '../../components/navbar/navbar';
-    import Components from '../../theme/master-file-material';
-    import "./dashboard.scss"
-    import { useForm } from "react-hook-form";
-    import theme from "../../theme/theme";
-    import BangleDullUI from '../../components/common/bangle_dull/bangledull';
-    import ArcCanvas from '../../components/common/arcdesign/arcdesign';
-    const Dashboard = () => {
-        const canvasRef = useRef(null);
-        const [showMainUI, setShowMainUI] = useState(false);
-        const [tabs, setTabs] = useState(() => {
-            // Load tabs from localStorage initially (if they exist)
-            const savedTabs = JSON.parse(localStorage.getItem('tabs')) || [];
-            return savedTabs;
+import React, { useRef, useState, useEffect } from "react";
+import Navbar from "../../components/navbar/navbar";
+import Components from "../../theme/master-file-material";
+import "./dashboard.scss";
+import { useFieldArray, useForm } from "react-hook-form";
+import theme from "../../theme/theme";
+import ArcCanvas from "../../components/common/arcdesign/arcdesign";
+import { Popover, Box, Button, Typography } from '@mui/material';
+import FormatColorFill from '@mui/icons-material/FormatColorFill';
+import CurveCanvasComponent from "../../components/common/CurveCanvas/canvas_curve";
+import ImagePopover from "../../components/common/popover/ImagePopover";
+import Box1 from "../../components/common/box1/box1";
+import Box2 from "../../components/common/box2/box2";
+import TurningPage from "../../components/common/TurningPage/Turning";
+import DesignPage from "../../components/common/DesignPage/design";
+const Dashboard = () => {
+    const [isOpenColorModel, setOpColorModel] = useState(false);
+    const [selectedColorName, setSelectedColorName] = useState(null);
+    const [canvasImg, SetcanvasImg] = useState(null);
+    const [selectedColors, setSelectedColors] = useState({ light: "", dark: "" });
+    const [selectedColumnId, setSelectedColumnId] = useState(null);
+    const [openfileData, setOpenFileData] = useState([]);
+    const [localCoordinates, setLocalCoordinates] = useState({ x: 0, y: 0 });
+    const [activeTab, setActiveTab] = useState('background');
+    const [activeIcon, setActiveIcon] = useState('Wall Dull'); // Track the active icon
+    const [storedData, setStoredData] = useState([])
+
+    const colorMapping = [
+        { name: "Golden", light: "#e8dca2", dark: "#bca323" },
+        { name: "Blue", light: "#8db3f0", dark: "#326bc7" },
+        { name: "Green", light: "#a5e8a7", dark: "#3a873c" },
+        { name: "Red", light: "#e8a895", dark: "#9c503a" },
+        { name: "Purple", light: "#c9a5e6", dark: "#c9a5e6" },
+        { name: "Grey", light: "#e6e1eb", dark: "#7a757d" },
+    ];
+
+    const [anchorEl, setAnchorEl] = useState(null);
+
+    const handleOpenColorPopover = (event, index) => {
+        setAnchorEl(event.currentTarget); // Set anchor for the popover
+        setSelectedColumnId(index); // Set the selected color index
+    };
+
+    const handleCloseColorPopover = () => {
+        setAnchorEl(null);
+    };
+
+    const isPopoverOpen = Boolean(anchorEl); // Check if the popover is open
+
+    const [tabs, setTabs] = useState(() => {
+        const savedTabs = JSON.parse(localStorage.getItem("tabs")) || [];
+        return savedTabs;
+    });
+
+    const {
+        register,
+        handleSubmit,
+        setValue,
+        reset,
+        watch,
+        control,
+        formState: { errors },
+    } = useForm({
+        defaultValues: {
+            bangle_width: tabs["width"],
+            bangle_diameter: tabs["diameter"],
+            bangle_type: tabs["type"],
+            bangle_height: tabs["height"],
+            position: tabs["position"],
+            tool_dia: 10,
+            tool_v_angle: 120,
+            pattern_type: "",
+            canvas_img: canvasImg,
+            dull_type: "",
+            xmargin: 2,
+            multipass: [
+                {
+                    id: 0,
+                    xpitch: 4,
+                    no_of_cuts: 50,
+                    cut_depth: 0.1,
+                    spindle_speed: 9000,
+                    cut_angle1: 0,
+                    long_angle: 45,
+                    x_shift_start: 0,
+                    y_shift_start: 0,
+                    angle_of_cutline: "",
+                    curve_path: "Spiral",
+                    curve_path_width: 50,
+                    curve_path_height: 50,
+                    curve_y: "",
+                    part_y: "",
+                    theme_color_light: "#e8dca2",
+                    theme_color_dark: "#bca323"
+                },
+            ],
+        },
+    });
+
+    const { fields, append, remove } = useFieldArray({
+        control,
+        name: "multipass"
+    })
+
+    useEffect(() => {
+        if (openfileData && Object.keys(openfileData).length > 0) {
+            console.log("openfileData", openfileData); // Check the structure
+
+            reset({
+                bangle_width: openfileData.bangle_width || '',
+                bangle_diameter: openfileData.bangle_diameter || '',
+                bangle_type: openfileData.bangle_type || '',
+                bangle_height: openfileData.bangle_height || '',
+                position: openfileData.position || '',
+                tool_dia: openfileData.tool_dia || 10,
+                tool_v_angle: openfileData.tool_v_angle || 120,
+                pattern_type: openfileData.pattern_type || '',
+                canvas_img: openfileData.canvas_img || canvasImg,
+                multipass: openfileData.multipass || []
+            });
+        }
+    }, [openfileData, reset]);
+
+    useEffect(() => {
+        if (canvasImg) {
+            setValue('canvas_img', canvasImg);  // Update form with new canvas image URL
+        }
+    }, [canvasImg, setValue]);
+
+    // This function for store formData in localstorage 
+    const onSubmitParameters = (data) => {
+    };
+
+    const handleModelSubmit = (data) => {
+        localStorage.removeItem("tabs"); // Clear old data
+        localStorage.setItem("tabs", JSON.stringify(data)); // Save new data
+        setTabs(data); // Update state with new tabs
+        console.log(data);
+
+        reset({
+            bangle_width: data['width'] || '',
+            bangle_diameter: data['diameter'] || '',
+            bangle_type: data['type'] || '',
+            bangle_height: data['height'] || '',
+            position: data['position'] || '',
+            tool_dia: 10,
+            tool_v_angle: 120,
+            multipass: [
+                {
+                    id: 0,
+                    xpitch: 4,
+                    no_of_cuts: 50,
+                    cut_depth: 0.1,
+                    spindle_speed: 9000,
+                    cut_angle1: 0,
+                    long_angle: 45,
+                    x_shift_start: 0,
+                    y_shift_start: 0,
+                    angle_of_cutline: "",
+                    curve_path: "Spiral",
+                    curve_path_width: 50,
+                    curve_path_height: 50,
+                    curve_y: "",
+                    part_y: "",
+                    theme_color_light: "#e8dca2",
+                    theme_color_dark: "#bca323"
+                },
+            ],
+        });
+    };
+
+    const addColumn = () => {
+        append({
+            id: fields.length + 1,  // Assign id based on current number of fields
+            xpitch: 4,
+            // xmargin: 2,
+            no_of_cuts: 50,
+            cut_depth: 0.1,
+            spindle_speed: 9000,
+            cut_angle1: 0,
+            long_angle: 45,
+            x_shift_start: 0,
+            y_shift_start: 0,
+            angle_of_cutline: "",
+            curve_path: "Spiral",
+            curve_path_width: 50,
+            curve_path_height: 50,
+            curve_y: "",
+            part_y: "",
+            theme_color_light: "#e8dca2",
+            theme_color_dark: "#bca323"
         });
 
-        const [activeTab, setActiveTab] = useState(0);
-        const [isOpen, setIsOpen] = useState(false);
+    };
 
-        // Update localStorage whenever tabs change
-        useEffect(() => {
-            if (tabs.length > 0) {
+    const deleteColumn = (index) => {
+        remove(index);
+    };
 
-                localStorage.setItem('tabs', JSON.stringify(tabs));
+    const formData = watch();
+
+    const handleImageClick = (index) => {
+        // Retrieve the formData from localStorage
+        const formData = JSON.parse(localStorage.getItem(activeIcon));
+
+
+        if (formData) {
+            // Retrieve the data based on the index
+            const clickedData = formData[index];
+
+            if (clickedData) {
+                // Reset the form with clickedData values
+                reset({
+                    bangle_width: tabs["width"],
+                    bangle_diameter: tabs["diameter"],
+                    bangle_type: tabs["type"],
+                    bangle_height: tabs["height"],
+                    position: tabs["position"],
+                    tool_dia: clickedData.tool_dia || 10, // You can provide a default if necessary
+                    tool_v_angle: clickedData.tool_v_angle || 120, // Default value if missing
+                    pattern_type: clickedData.pattern_type || "", // Default value
+                    canvas_img: clickedData.canvas_img || canvasImg, // Default image
+                    dull_type: activeIcon,
+                    xmargin: 2,
+                    multipass: clickedData.multipass || [
+                        {
+                            id: 0,
+                            xpitch: 4,
+                            // xmargin: 2,
+                            no_of_cuts: 50,
+                            cut_depth: 0.2,
+                            spindle_speed: 9000,
+                            cut_angle1: 0,
+                            long_angle: 45,
+                            x_shift_start: 0,
+                            y_shift_start: 0,
+                            angle_of_cutline: "",
+                            curve_path: "",
+                            curve_path_width: "",
+                            curve_path_height: "",
+                            part_x: "",
+                            part_y: "",
+                            theme_color_light: "#e8dca2",
+                            theme_color_dark: "#bca323"
+                        },
+                    ], // Set default multipass or clicked multipass
+                });
             }
-        }, [tabs]);
+        } else {
+            console.log('No form data found in localStorage');
+        }
+    };
 
-        const handleModelSubmit = (data) => {
-            // Create a new tab with the submitted data
-            setTabs((prevTabs) => {
-                const updatedTabs = [...prevTabs, data];
-                setActiveTab(updatedTabs.length - 1);
-                return updatedTabs;
-            });
-        };
+    const handleIconClick = (iconName) => {
+        const GetFormData = JSON.parse(localStorage.getItem(iconName)) || [];
+        setStoredData(GetFormData)
+        console.log(iconName);
+        
+        setValue("dull_type", iconName);
+        setActiveIcon(iconName);
+    };
 
-        const toggleDiv = () => {
-            setIsOpen((prev) => !prev);
-        };
 
-        const { register, handleSubmit } = useForm();
-        const [columns, setColumns] = useState([{ id: 1 }]);
+    return (
+        <>
+            <div className="main-container">
 
-        const addColumn = () => {
-            const newColumn = { id: columns.length + 1 };
-            setColumns([...columns, newColumn]);
-        };
-        // Function to delete a column based on its ID
-        const deleteColumn = (id) => {
-            setColumns((prevColumns) => prevColumns.filter(column => column.id !== id));
-        };
+                <Navbar
+                    onCreateNewFile={handleModelSubmit}
+                    dashboardData={formData}
+                    setActiveTab={setActiveTab}
+                    setOpenFileData={setOpenFileData}
+                ></Navbar>
+                <div className="content">
 
-        useEffect(() => {
-            if (tabs.length > 0) {
-                const { width, height } = tabs[activeTab];
-            
-            }
-        }, [tabs, activeTab]);
+                    {activeTab === 'background' && (
+                        <>
+                            <Box1 handleIconClick={handleIconClick} activeIcon={activeIcon} />
+               
+                            <Box2 storedData={storedData} handleImageClick={handleImageClick}/>
 
-        const bangleDimensions = tabs[activeTab] ? {
-            width: tabs[activeTab].width || 0,
-            height: tabs[activeTab].height || 0
-        } : { width: 0, height: 0 };
-
-        const handleTabChange = (index) => {
-            setActiveTab(index);
-          
-        };
-        const [params, setParams] = useState({
-            bangleWidth: 20,
-            bangle2width:30,
-            xPitch: 1.3,
-            xMargin: 2,
-            yPitch: 5,
-            yMargin: 2,
-            noOfCuts: 80,
-            longCutAngle: 37.582,
-            depthOfCut: 0.1,
-            horizontalSpindleSpeed: 9000,
-            zCutSpeed: 200,
-            toolGap: 0.5,
-            bangleRotation: 'CW',
-            horizontalRotation: 'CW',
-            dullStartDirection: 'R->L',
-            toolDiameter: 16,
-            toolVAngle: 120,
-            angleOfCutLines: 0,
-            toolNumber: 21,
-            diameter: 63.67
-          });
-    
-        // Handle dynamic input changes
-        const handleInputChange = (event) => {
-            
-            const { name, value } = event.target;
-            setParams((prevParams) => ({
-            ...prevParams,
-            [name]: value,  // Dynamically update the corresponding parameter
-            }));
-
-        };
-
-        const onSubmit = (data) => {
-            console.log("Submitted data:", data);
-        };
-
-        return (
-            <>
-                <Navbar onCreateNewFile={handleModelSubmit} />
-                <div className="container-fluid" style={{ paddingLeft: "0px" }}>
-                    <div className="d-flex" style={{ minHeight: "85vh" }}>
-                        <div className="col" style={{ backgroundColor: "#F5F6F7", maxWidth: "50px" }}>
-                            <div className="arrow-toggle">
-                                <button onClick={toggleDiv} className="arrow-button">
-                                    {isOpen ? <Components.Icons.ArrowBack /> : <Components.Icons.ArrowForward />}
-                                </button>
-                            </div>
-                        </div>
-                        {isOpen && (
-                            <div className="col" style={{ maxWidth: "50px" }}>
-
-                            </div>
-                        )}
-                        <div className={`col ${isOpen ? '' : 'flex-grow-1'}`} style={{ backgroundColor: "#E8E8E8" }}>
-                            <Components.Tabs value={activeTab} onChange={(e, newValue) => handleTabChange(newValue)}
-                                sx={{
-                                    backgroundColor: '#fff',
-                                    borderRadius: '4px',
-                                    marginBottom: '5px',
-                                    overflow: 'hidden'
-                                }}
-                            >
-                                {tabs.map((tab, index) => (
-                                    <Components.Tab key={index} label={`Page
-                                ${index + 1}`} />
-                                ))}
-
-                            </Components.Tabs >
-                            <div className="d-flex justify-content-between" style={{ height: "78vh" }}>
-                                {/* box One  */}
-                                <div className="p-2 box1" style={{ backgroundColor: "#ffffff", width: "20%", marginRight: "10px" }}>
-                                    <div className='parameters-div'>
-                                        <h6 >Background Library</h6 >
-                                    </div>
+                            <div className="row box3">
+                                <div className="d-flex justify-content-between p-1">
+                                    <label>
+                                        <strong className="strong-class">Type :</strong>
+                                        <span className="text-class">  {watch('bangle_type')
+                                            .replace(/_/g, ' ') // Replace underscores with spaces
+                                            .replace(/\b\w/g, char => char.toUpperCase()) // Capitalize the first letter of each word
+                                        }</span>
+                                    </label>
+                                    <label>
+                                        <strong className="strong-class">Width :</strong>
+                                        <span className="text-class">{watch('bangle_width')}</span>
+                                    </label>
+                                    <label>
+                                        <strong className="strong-class">Diameter :</strong>
+                                        <span className="text-class">{watch('bangle_diameter')}</span>
+                                    </label>
+                                    <label>
+                                        <strong className="strong-class">Pattern :</strong>
+                                        <span className="text-class">{watch('pattern_type')}</span>
+                                    </label>
                                 </div>
-                                {/* box Two  */}
-                                <div className="p-2 box2" style={{ backgroundColor: "#ffffff", width: "50%", overflowY: "auto", marginRight: "10px", position: "relative" }}>
-                                    <div style={{ height: "100%", display: 'flex', alignItems: "center", justifyContent: "center" }} > {/* Example height for content */}
-                                    
-                                        {tabs.length > 0 && (
-                                            // <BangleDullUI
-                                            //     bangleWidth={bangleDimensions.width}
-                                            //     bangleHeight={bangleDimensions.height}
-                                            //     params={params}
-                                            //     showMainUI={showMainUI} 
-                                            //     setShowMainUI={setShowMainUI} 
-                                            // />
-                                            <ArcCanvas/>  
-                                            // <Preview/>
-                                        )}
+                                <div className="">
+                                    <ArcCanvas params={formData} localCoordinates={localCoordinates} setLocalCoordinates={setLocalCoordinates} SetcanvasImg={SetcanvasImg} />
+                                </div>
+                                <div className="col xy-cord">
+                                    <div>
+                                        <span>X: <span className="text-class">{(localCoordinates.x.toFixed(2))}</span> </span>
+                                        <span style={{ marginLeft: '30px' }}>Y: <span className="text-class">{(localCoordinates.y.toFixed(2))}</span></span>
+                                    </div>
+                                    <div>
+                                        <span>
+                                            Zero Position:
+                                            <span className="text-class">
+                                                {watch('position')
+                                                    .replace(/_/g, ' ') // Replace underscores with spaces
+                                                    .replace(/\b\w/g, char => char.toUpperCase()) // Capitalize the first letter of each word
+                                                }
+                                            </span>
+                                        </span>
                                     </div>
                                 </div>
 
-                                {/* box three  */}
-                                <div className="p-2 box3" style={{ backgroundColor: "#ffffff", width: "40%", display: "flex", flexDirection: "column", marginRight: "10px", justifyContent: "flex-start", overflowY: "auto", }}>
-                                    <form onSubmit={handleSubmit(onSubmit)} style={{ fontSize: "14px", flexGrow: 1 }}>
-                                        <div style={{ height: "200px" }}>
+                            </div>
 
-                                            <Components.Accordion defaultExpanded>
-                                                <Components.AccordionSummary
-                                                    expandIcon={<Components.Icons.ExpandMore />}
-                                                    aria-controls="basic-parameters-content"
-                                                    id="basic-parameters-header"
-                                                    sx={{
-                                                        background: "#F5F6F7",
-                                                        borderBottom: "1px solid rgb(169, 168, 168)",
-                                                        minHeight: '25px !important',  // Apply min-height globally
-                                                        maxHeight: '25px !important',  // Apply max-height globally
-                                                        '&.Mui-expanded': {
-                                                            minHeight: '25px !important',  // Apply min-height when expanded
-                                                            maxHeight: '25px !important',  // Apply max-height when expanded
-
-                                                        },
-                                                    }}
-                                                >
-                                                    <Components.Typography variant="body1" > {/* Use body1 or smaller font variant */}
-                                                        Basic Parameters
-                                                    </Components.Typography>
-                                                </Components.AccordionSummary>
-                                                <Components.AccordionDetails>
-                                                    <div className="row">
-                                                        <div className="col">
-                                                            <div className='parameters-div'>
-                                                                <label>Bangle Width :</label>
-                                                                <input {...register("bangleWidth")} type="number" step="0.01" className="no-spinner" onChange={handleInputChange}/>
-                                                            </div>
-
-                                                            <div className='parameters-div'>
-                                                                <label>Tool dia :</label>
-                                                                <input {...register("tool_dia")} type="number" step="0.01" className="no-spinner" onChange={handleInputChange}/>
-                                                            </div>
-                                                            <div className='parameters-div'>
-                                                                <label>Tool V Angle :</label>
-                                                                <input {...register("tool_v_angle")} type="number" step="0.01" className="no-spinner" onChange={handleInputChange}/>
-                                                            </div>
-                                                            <div className='parameters-div'>
-                                                                <label>Tool Number :</label>
-                                                                <input {...register("tool_number")} type="number" step="0.01" className="no-spinner" onChange={handleInputChange}/>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="col">
-                                                            <div className='parameters-div'>
-                                                                <label>Bangle (Y) Rotation Direction :</label>
-                                                                <input {...register("rotation_direction")} type="number" step="0.01" className="no-spinner" onChange={handleInputChange}/>
-                                                            </div>
-                                                            <div className='parameters-div'>
-                                                                <label>Dull Start Direction, X direction:</label>
-                                                                <input {...register("dull_start_direction")} type="number" step="0.01" className="no-spinner" onChange={handleInputChange}/>
-                                                            </div>
-                                                        </div>
+                            <div className="box4">
+                                <form onSubmit={handleSubmit(onSubmitParameters)} className="form-div">
+                                    <div style={{ flexGrow: 1 }}>
+                                        {/* Tool Section */}
+                                        <div className="row m-1 border border-2 right-div">
+                                            <div className="row p-1">
+                                                <div className="col-12 col-md-4 mb-1">
+                                                    <div className="d-flex flex-column">
+                                                        <label className="mb-1" style={{ whiteSpace: 'nowrap' }}>
+                                                            <strong>Tool Diameter</strong>
+                                                        </label>
+                                                        <input
+                                                            {...register("tool_dia")}
+                                                            type="number"
+                                                            //step="0.01"
+                                                            className=" no-spinner"
+                                                        />
                                                     </div>
-                                                </Components.AccordionDetails>
-                                            </Components.Accordion>
-
-                                            {/* Multipass Parameters  */}
-                                            <div className="row m-2">
-                                                <div className="d-flex align-items-center" style={{ backgroundColor: "#F5F6F7" }}>
-                                                    <h6 className="mb-0">Multipass</h6>
-                                                    <button
-                                                        type="button"
-                                                        style={{
-                                                            marginRight: '10px',
-                                                            borderRadius: '50%',
-                                                            paddingBlock: '7px',
-                                                            border: '1px solid transparent',
-                                                            backgroundColor: 'transparent',
-                                                        }}
-                                                        onClick={addColumn}
-                                                    >
-                                                        <Components.Icons.Add fontSize="small" />
-                                                    </button>
                                                 </div>
-
-                                                <div className="d-flex flex-column">
-                                                    {/* Labels Row */}
-                                                    <div className="d-flex">
-                                                        <div className="col-auto label-column mt-4">
-                                                            {/* <div className="label-header">Parameters</div> */}
-                                                            <div className="parameters-div2"><label>X Pitch</label></div>
-                                                            <div className="parameters-div2"><label>X Margin </label></div>
-                                                            <div className="parameters-div2"><label>No. of Cuts</label></div>
-                                                            <div className="parameters-div2"><label>Long Cut Angle</label></div>
-                                                            <div className="parameters-div2"><label>Depth of Cut</label></div>
-                                                            <div className="parameters-div2"><label>Horizontal Spindle Speed</label></div>
-                                                            <div className="parameters-div2"><label>Z Cut Speed</label></div>
-                                                            <div className="parameters-div2"><label>Tool Gap</label></div>
-                                                            <div className="parameters-div2"><label>Angle of Cutline</label></div>
-                                                        </div>
-
-                                                        {/* Dynamically Generated Columns */}
-                                                        <div className="columns-container">
-                                                            {columns.map((column) => (
-                                                                <div className="col-auto input-column" key={column.id} style={{ paddingLeft: "5px" }}>
-                                                                    {/* <div className="column-header">{column.id}</div> */}
-                                                                    <div className="d-flex align-items-center">
-                                                                        {/* <h6 className="mb-0">{column.id}</h6> */}
-                                                                        <div>
-                                                                            {column.id}
-                                                                        </div>
-                                                                        {console.log(column.id)}
-                                                                        <button
-                                                                            type='button'
-                                                                            style={{
-                                                                                border: '1px solid transparent',
-                                                                                backgroundColor: 'transparent',
-                                                                                color: theme.palette.delete_color
-                                                                            }}
-                                                                            onClick={() => deleteColumn(column.id)}
-                                                                        >
-                                                                            <Components.Icons.Delete fontSize="small" />
-                                                                        </button>
-                                                                    </div>
-                                                                    <div className="parameters-div"><input {...register(`xPitch`)} type="number" step="0.01" className="no-spinner" onChange={handleInputChange}/></div>
-                                                                    <div className="parameters-div"><input {...register(`xMargin`)} type="number" step="0.01" className="no-spinner" onChange={handleInputChange}/></div>
-                                                                    <div className="parameters-div"><input {...register(`no_of_cuts_${column.id}`)} type="number" step="0.01" className="no-spinner" /></div>
-                                                                    <div className="parameters-div"><input {...register(`long_cut_angle_${column.id}`)} type="number" step="0.01" className="no-spinner" onChange={handleInputChange}/></div>
-                                                                    <div className="parameters-div"><input {...register(`depth_of_cut_${column.id}`)} type="number" step="0.01" className="no-spinner" onChange={handleInputChange}/></div>
-                                                                    <div className="parameters-div"><input {...register(`horizontal_spindle_speed_${column.id}`)} type="number" step="0.01" className="no-spinner" onChange={handleInputChange}/></div>
-                                                                    <div className="parameters-div"><input {...register(`z_cut_speed_${column.id}`)} type="number" step="0.01" className="no-spinner" onChange={handleInputChange}/></div>
-                                                                    <div className="parameters-div"><input {...register(`tool_gap_${column.id}`)} type="number" step="0.01" className="no-spinner" onChange={handleInputChange}/></div>
-                                                                    <div className="parameters-div"><input {...register(`angleOfCutLines`)} type="number" step="0.01" className="no-spinner" onChange={handleInputChange}/></div>
-                                                                    
-                                                                </div>
-                                                            ))}
-                                                        </div>
+                                                <div className="col-12 col-md-4 mb-1">
+                                                    <div className="d-flex flex-column">
+                                                        <label className="mb-1" style={{ whiteSpace: 'nowrap' }}>
+                                                            <strong>Tool Angle</strong>
+                                                        </label>
+                                                        <input
+                                                            {...register("tool_v_angle")}
+                                                            type="number"
+                                                            //step="0.01"
+                                                            className="no-spinner"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="col-12 col-md-4 mb-1">
+                                                    <div className="d-flex flex-column">
+                                                        <label className="mb-1" style={{ whiteSpace: 'nowrap' }}>
+                                                            <strong>X-Margin</strong>
+                                                        </label>
+                                                        <input
+                                                            {...register("xmargin")}
+                                                            type="number"
+                                                            step="0.01"
+                                                            className="no-spinner"
+                                                        />
                                                     </div>
                                                 </div>
                                             </div>
-                                            {/* Button */}
-                                            <div className="row Button-div">
-                                                <div className="col">
-                                                    <Components.Button variant="contained" onClick={() => setShowMainUI(true)} style={{ backgroundColor: "#F5F6F7", color: "#000000" }}>Preview</Components.Button>
-                                                </div>
-                                                <div className="col">
-                                                    <Components.Button variant="contained" style={{ backgroundColor: "#F5F6F7", color: "#000000" }}>Generate Code</Components.Button>
-                                                </div>
-                                                <div className="col">
-                                                    <Components.Button variant="contained" style={{ backgroundColor: "#F5F6F7", color: "#000000" }}>Add Library</Components.Button>
+
+                                        </div>
+                                        {/* Multipass Parameters */}
+                                        <div className="row m-1">
+                                            <div className="d-flex align-items-center multilayer ">
+                                                <h6 className="mb-0 title-lable">MultiLayer</h6>
+                                                <button type="button" style={{ border: '1px solid transparent', backgroundColor: 'transparent' }}
+                                                    onClick={addColumn}
+                                                >
+                                                    <Components.Icons.Add fontSize="small" />
+                                                </button>
+                                            </div>
+                                            <div className="d-flex flex-column">
+                                                <div className="d-flex">
+                                                    <div className="col-auto label-column mt-4">
+
+                                                        <div className="parameters-div2"><label>X Pitch</label></div>
+                                                        {/* <div className="parameters-div2"><label>X Margin </label></div> */}
+                                                        <div className="parameters-div2"><label>No. of Cuts (Y pitch)</label></div>
+                                                        <div className="parameters-div2"><label>Cut Depth</label></div>
+                                                        <div className="parameters-div2"><label>Spindle Speed</label></div>
+                                                        <div className="parameters-div2"><label>Cut Angle (X1 Axis)</label></div>
+                                                        <div className="parameters-div2"><label>Long Angle</label></div>
+                                                        <div className="parameters-div2"><label>X shift Start</label></div>
+                                                        <div className="parameters-div2"><label>Y shift Start</label></div>
+                                                        <div className="parameters-div2"><label>Angle of Cutline</label></div>
+                                                        <div className="parameters-div2"><label>Curve Path</label></div>
+                                                        <div className="parameters-div2"><label>Curve Path width</label></div>
+                                                        <div className="parameters-div2"><label>Curve Path Height</label></div>
+                                                        <div className="parameters-div2"><label>Boxes Y</label></div>
+                                                    </div>
+                                                    {/* Dynamically Generated Columns */}
+                                                    <div className="columns-container">
+                                                        {fields.map((column, index) => (
+
+                                                            <div className="col-auto input-column" key={column.id} style={{ paddingLeft: "5px" }}>
+                                                                <div className="d-flex align-items-center">
+                                                                    <div>
+                                                                        <button
+                                                                            onClick={(event) => handleOpenColorPopover(event, index)}
+                                                                            style={{ border: '1px solid transparent', backgroundColor: 'transparent' }}
+                                                                        >
+                                                                            <Components.Icons.FormatColorFill
+                                                                                style={{
+                                                                                    width: '20px',
+                                                                                    height: '17px',
+                                                                                    color: watch(`multipass[${index}].theme_color_dark`) || 'black' // Use selected color for the icon or default
+                                                                                }}
+                                                                            />
+                                                                        </button>
+                                                                        <Popover
+                                                                            open={isPopoverOpen}
+                                                                            anchorEl={anchorEl}
+                                                                            onClose={handleCloseColorPopover}
+                                                                            anchorOrigin={{
+                                                                                vertical: 'bottom',
+                                                                                horizontal: 'left',
+                                                                            }}
+                                                                            transformOrigin={{
+                                                                                vertical: 'top',
+                                                                                horizontal: 'left',
+                                                                            }}
+                                                                        >
+                                                                            <Box sx={{ padding: "10px" }}>
+                                                                                <Typography sx={{ fontSize: "14px", marginBottom: "10px", textAlign: 'center', fontWeight: 'bold' }}>
+                                                                                    Select a Theme
+                                                                                </Typography>
+                                                                                <Box
+                                                                                    display="flex"
+                                                                                    flexDirection="row"
+                                                                                    justifyContent="center"
+                                                                                    alignItems="center"
+                                                                                    gap={1}
+                                                                                    flexWrap="nowrap"
+                                                                                >
+                                                                                    {colorMapping.map((color) => (
+                                                                                        <Box
+                                                                                            key={color.name}
+                                                                                            onClick={() => {
+                                                                                                setSelectedColorName(color.name);
+                                                                                                setValue(`multipass[${selectedColumnId}].theme_color_light`, color.light);
+                                                                                                setValue(`multipass[${selectedColumnId}].theme_color_dark`, color.dark);
+                                                                                                handleCloseColorPopover(); // Close after selection
+                                                                                            }}
+                                                                                            sx={{
+                                                                                                display: "flex",
+                                                                                                justifyContent: "center",
+                                                                                                alignItems: "center",
+                                                                                                width: 60,
+                                                                                                height: 30,
+                                                                                                backgroundColor: color.dark,
+                                                                                                borderRadius: "3px",
+                                                                                                color: "#fff",
+                                                                                                fontWeight: "bold",
+                                                                                                cursor: "pointer",
+                                                                                                textTransform: "capitalize",
+                                                                                                boxShadow: "0 0 3px rgba(0,0,0,0.2)",
+                                                                                                border: selectedColorName === color.name ? "3px solid #000" : "none",
+                                                                                            }}
+                                                                                        >
+                                                                                            {color.name}
+                                                                                        </Box>
+                                                                                    ))}
+                                                                                </Box>
+                                                                            </Box>
+                                                                        </Popover>
+                                                                    </div>
+                                                                    <span style={{ fontWeight: "bold", fontSize: "14px" }}>{index + 1}</span>
+                                                                    {
+                                                                        index !== 0 && (
+                                                                            <button
+                                                                                type='button'
+                                                                                style={{ border: '1px solid transparent', backgroundColor: 'transparent', color: theme.palette.delete_color }}
+                                                                                onClick={() => deleteColumn(index)}
+                                                                            >
+                                                                                <Components.Icons.Delete fontSize="small" style={{ width: '20px', height: '17px' }} />
+                                                                            </button>
+                                                                        )
+                                                                    }
+                                                                </div>
+                                                                <div className="parameters-div">
+                                                                    <input {...register(`multipass[${index}].xpitch`)} type="number" step="0.1" className="no-spinner" />
+                                                                </div>
+                                                                {/* <div className="parameters-div">
+                                                                    <input {...register(`xmargin`)}
+                                                                        disabled={index !== 0}
+                                                                        type="number" step="1" className="no-spinner" />
+                                                                </div> */}
+                                                                <div className="parameters-div">
+                                                                    <input {...register(`multipass[${index}].no_of_cuts`)} type="number" className="no-spinner" />
+                                                                </div>
+                                                                <div className="parameters-div">
+                                                                    <input {...register(`multipass[${index}].cut_depth`)} type="number" step="0.01" className="no-spinner" />
+                                                                </div>
+                                                                <div className="parameters-div">
+                                                                    <input {...register(`multipass[${index}].spindle_speed`)} type="number" className="no-spinner" />
+                                                                </div>
+                                                                <div className="parameters-div">
+                                                                    <input {...register(`multipass[${index}].cut_angle1`)} type="number" className="no-spinner" />
+                                                                </div>
+                                                                <div className="parameters-div">
+                                                                    <input
+                                                                        {...register(`multipass[${index}].long_angle`)}
+                                                                        type="number"
+                                                                        className="no-spinner"
+                                                                        disabled={activeIcon == 'Wall Dull'}
+                                                                    />
+                                                                </div>
+                                                                <div className="parameters-div">
+                                                                    <input {...register(`multipass[${index}].x_shift_start`)} type="number" step="0.1" className="no-spinner" />
+                                                                </div>
+                                                                <div className="parameters-div">
+                                                                    <input {...register(`multipass[${index}].y_shift_start`)} type="number" step="0.1" className="no-spinner" />
+                                                                </div>
+                                                                <div className="parameters-div">
+                                                                    <input {...register(`multipass[${index}].angle_of_cutline`)} type="number" className="no-spinner" />
+                                                                </div>
+                                                                <div className="parameters-div">
+                                                                    <select {...register(`multipass[${index}].curve_path`)} className="no-spinner"
+                                                                        style={{ height: '30px', width: '60px', borderRadius: "4px", borderColor: "1px solid #ccc" }}
+                                                                    >
+                                                                        <option value="Spiral">Spiral</option>
+                                                                        <option value="Straight">Straight</option>
+                                                                        <option value="C">C</option>
+                                                                        <option value="S">S</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div className="parameters-div">
+                                                                    <input {...register(`multipass[${index}].curve_path_width`)} type="number" className="no-spinner" />
+                                                                </div>
+                                                                <div className="parameters-div">
+                                                                    <input {...register(`multipass[${index}].curve_path_height`)} type="number" className="no-spinner" />
+                                                                </div>
+                                                                <div className="parameters-div">
+                                                                    <input {...register(`multipass[${index}].curve_y`)} type="number" className="no-spinner" />
+                                                                </div>
+
+                                                                <div className="parameters-div">
+                                                                    <CurveCanvasComponent
+                                                                        width={watch(`multipass[${index}].curve_path_width`)}  // Canvas width (can be set to a fixed size or dynamic based on requirement)
+                                                                        height={watch(`multipass[${index}].curve_path_height`)} // Canvas height (can be set to a fixed size or dynamic based on requirement)
+                                                                        curve_path={watch(`multipass[${index}].curve_path`)}
+                                                                        style={{ background: '#000', borderRadius: "4px" }}
+                                                                    />
+                                                                </div>
+
+                                                            </div>
+                                                        ))}
+                                                    </div>
+
                                                 </div>
                                             </div>
                                         </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div >
-                <div className="">
 
+
+                                    </div>
+                                    <div className="row m-1">
+                                        <div className="Button-div d-flex justify-content-between w-100">
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+
+                        </>
+                    )}
+
+                    {activeTab === 'turning' && (
+                     
+                            <TurningPage/>
+                    
+                    )}
+
+                    {activeTab === 'design' && (
+                    
+                            <DesignPage/>
+                        )}
                 </div>
 
-            </>
+            </div>
+        </>
+    );
+};
 
-        );
-    };
-
-    export default Dashboard;
+export default Dashboard;

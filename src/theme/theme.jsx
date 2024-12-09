@@ -31,6 +31,7 @@ const theme = responsiveFontSizes(createTheme({
         table_header:'#9eb4c7',
         table_odd: '#eeeeeeef',
         tbale_even: '#ffffff',
+        fontSize16: '16px',
     }
 }))
 

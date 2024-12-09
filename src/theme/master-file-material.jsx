@@ -40,6 +40,9 @@ import Button from '@mui/material/Button';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import Card from '@mui/material/Card';
+import TabContext from '@mui/lab/TabContext';
+import TabList from '@mui/lab/TabList';
+import TabPanel from '@mui/lab/TabPanel';
 
 const BootstrapInput = styled(InputBase)(({ theme }) => ({
   "label + &": {
@@ -78,6 +81,9 @@ const BootstrapInput = styled(InputBase)(({ theme }) => ({
 const Components = {
 
   Radio,
+  TabContext,
+  TabList,
+  TabPanel,
   Tabs,
   Tab,
   RadioGroup,

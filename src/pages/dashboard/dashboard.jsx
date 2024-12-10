@@ -22,7 +22,7 @@ const Dashboard = () => {
     const [openfileData, setOpenFileData] = useState([]);
     const [localCoordinates, setLocalCoordinates] = useState({ x: 0, y: 0 });
     const [activeTab, setActiveTab] = useState('background');
-    const [activeIcon, setActiveIcon] = useState('Wall Dull'); // Track the active icon
+    const [activeIcon, setActiveIcon] = useState('Wall Dull');
     const [storedData, setStoredData] = useState([])
 
     const colorMapping = [
@@ -88,7 +88,7 @@ const Dashboard = () => {
                     curve_path: "Spiral",
                     curve_path_width: 50,
                     curve_path_height: 50,
-                    curve_y: "",
+                    curve_y: 1,
                     part_y: "",
                     theme_color_light: "#e8dca2",
                     theme_color_dark: "#bca323"
@@ -185,7 +185,7 @@ const Dashboard = () => {
             curve_path: "Spiral",
             curve_path_width: 50,
             curve_path_height: 50,
-            curve_y: "",
+            curve_y: 1,
             part_y: "",
             theme_color_light: "#e8dca2",
             theme_color_dark: "#bca323"

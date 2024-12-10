@@ -135,11 +135,20 @@ const ArcCanvas = ({ params, localCoordinates, setLocalCoordinates, SetcanvasImg
             const CurvePath = layer.curve_path
             const CurvePathHeight = layer.curve_path_height
             const CurvePathWidth = layer.curve_path_width
-            const Ycurve = layer.curve_y
+            const Boxes_y = layer.curve_y 
             const cut_angle = 180 - cut_angle1;
+            let Rx = 1;
+            let Ry = 1;
+            let Dy = Ry*2
+            let Y1 = 0
+            let Y2 = 0
+            let Y3 = 0
+            let X1 = 0
+            let X2 = 0
+            let cut_x1 = 0
+            
             let cut_x_start = CANVAS_WIDTH / 2 - BangleWidth_29 / 2 - XmarginWith_29;
             let cut_y_start = FIXED_CANVAS_HEIGHT / 2 + BangleHeight_29 / 2;
-            // console.log(FIXED_CANVAS_HEIGHT,BangleHeight_29, 'cut y start')
     
             // Calculate dimensions
             const R = tool_dia / 2;
@@ -205,12 +214,41 @@ const ArcCanvas = ({ params, localCoordinates, setLocalCoordinates, SetcanvasImg
                     context.fillStyle = theme_dark;
                     context.fill();
                     context.restore();
+                    
+                    if (CurvePath =='C') {
+                        Ry=BangleHeightWithout_29/2/Boxes_y;
+                        Dy=Ry*2
+                        Rx = Ry/CurvePathHeight*CurvePathWidth
+                        Y1 = i*(BangleHeightWithout_29)/no_of_cuts;
+                        Y3 = Y1 - Dy * Math.floor(Y1/ Dy)
+                        Y2 = Y3*(-1)+(BangleHeightWithout_29/2/Boxes_y);
+                        
+                        X1 = (Rx*Rx)*(1-(Y2*Y2)/(Ry*Ry));
+                        X2 = Math.sqrt(X1);
+                        cut_x = cut_x_start-X2*2.9 + XPitchWith_29*j;
+                       
+                    }
+                    if (CurvePath =='Spiral') {
+                        cut_x += XPitchWith_29/no_of_cuts;
+                    }
+
                     cut_y -= (BangleHeight_29+y_increment)/no_of_cuts;
-                    cut_x += XPitchWith_29/no_of_cuts;
                     if (cut_y < (cut_y_start-BangleHeight_29)) {
                         cut_y = cut_y + BangleHeight_29;
                     }
+                    console.log("curve path", CurvePath, 'Y1=', Y1,"Y3=", math.abs(Y1/ Dy), "Dy=", Dy)
                 }
+                if (CurvePath =='Straight') {
+                    cut_x += XPitchWith_29;
+                }
+                if (CurvePath =='C') {
+                    cut_x += XPitchWith_29;
+                }
+                if (CurvePath =='S') {
+                    cut_x += XPitchWith_29;
+                                  
+                }
+               
             }
         });
     };

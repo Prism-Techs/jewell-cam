@@ -8,15 +8,15 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 5174,
   },
-  // resolve: {
-  //   alias: {
-  //     '@': path.resolve(__dirname, './src'),
-  //     '@img': path.resolve(__dirname, './src/assets/img'),
-  //     '@font': path.resolve(__dirname, './src/assets/fonts'),
-  //     '@css': path.resolve(__dirname, './src/assets/css'),
-  //     '@svg': path.resolve(__dirname, './src/assets/svg'),
-  //   },
-  // },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+      '@img': path.resolve(__dirname, './src/assets/img'),
+      '@font': path.resolve(__dirname, './src/assets/fonts'),
+      '@css': path.resolve(__dirname, './src/assets/css'),
+      '@svg': path.resolve(__dirname, './src/assets/svg'),
+    },
+  },
   build: {
     outDir: 'dist',
     emptyOutDir: true,

@@ -98,7 +98,6 @@ const Components = {
   // RichTreeView,
   // treeItemClasses,
   Paper,
-  CircularProgress,
   // TreeItem,
   Zoom,
   Modal,

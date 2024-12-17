@@ -7,13 +7,24 @@ import { useMediaQuery, useTheme } from '@mui/material';
 import Components from '../../theme/master-file-material';
 import logo from '../../theme/img/Vekaria_logo.png';
 import { useNavigate } from 'react-router-dom';
-
+import FileCreator from '../common/FileCreator/fileCreate';
+import MachineSettingModel from '../models/MachineSettingModel/machine-setting-model';
 const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab }) => {
     const navigate = useNavigate();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [drawer, setDrawer] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
+    const [isMachineSettingModel, setIsMachineSettingModel] = useState(false)
     const [patternName, setPatternName] = useState('');
+
+    const handleMachineSettingModelOpen= (e) => {
+        e.preventDefault();
+        setIsMachineSettingModel(true);
+    };
+
+    const handleMachineSettingModelClose = () => {
+        setIsMachineSettingModel(false);
+    };
 
     // File input change handler to read file data
     const handleBackground = () => {
@@ -61,9 +72,6 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab 
             reader.readAsText(file);  // Read file as text
         }
     };
-    
-    
-
 
     const handleConfirmOpenModal = (e) => {
         e.preventDefault();
@@ -87,71 +95,6 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab 
         localStorage.removeItem('projectType');
         navigate('/');
     };
-
-    // const handleSaveToLibrary = () => {
-    //     console.log(dashboardData, "check dashboard data");
-    //     const keyUpdate = { ...dashboardData, pattern_type: patternName };
-    //     try {
-    //         let existingData = localStorage.getItem('formData');
-
-    //         if (existingData) {
-    //             existingData = JSON.parse(existingData);
-
-    //             if (!Array.isArray(existingData)) {
-    //                 console.warn("Data in localStorage is not an array. Resetting to an empty array.");
-    //                 existingData = [];
-    //             }
-    //         } else {
-    //             existingData = [];
-    //         }
-
-    //         const updatedData = [...existingData, keyUpdate];
-
-    //         localStorage.setItem('formData', JSON.stringify(updatedData));
-
-    //         //console.log("Data saved successfully!");
-    //     } catch (error) {
-    //         console.error("Error saving data to localStorage:", error);
-    //     }
-    //     setIsConfirmModalOpen(false);
-    //     setPatternName('')
-    // };
-
-    // const handleSaveToLibrary = () => {
-    //     const check_type = dashboardData?.dull_type
-    //     console.log(dashboardData, "check dashboard data");
-    //     // Get the dull_type from the form
-    //     const dullType = check_type// Assuming "dull_type" is stored in your form
-    //     const keyUpdate = { ...dashboardData, pattern_type: patternName };
-    //     try {
-    //         // Use dull_type as the localStorage key
-    //         const storageKey = dullType || "Default"; // Fallback to "Default" if dull_type is not set
-    //         let existingData = localStorage.getItem(storageKey);
-    
-    //         if (existingData) {
-    //             existingData = JSON.parse(existingData);
-    
-    //             if (!Array.isArray(existingData)) {
-    //                 console.warn(`Data in localStorage for ${storageKey} is not an array. Resetting to an empty array.`);
-    //                 existingData = [];
-    //             }
-    //         } else {
-    //             existingData = [];
-    //         }
-    
-    //         // Update the data and save it back to localStorage
-    //         const updatedData = [...existingData, keyUpdate];
-    //         localStorage.setItem(storageKey, JSON.stringify(updatedData));
-    
-    //         console.log(`Data saved successfully under key: ${storageKey}`);
-    //     } catch (error) {
-    //         console.error("Error saving data to localStorage:", error);
-    //     }
-    
-    //     setIsConfirmModalOpen(false);
-    //     setPatternName('');
-    // };
-
 
     const handleSaveToLibrary = () => {
         const check_type = dashboardData?.dull_type;
@@ -237,6 +180,14 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab 
 
     }
 
+    const fileCreatorRef = useRef(null);
+  
+    const handleCreateFile = () => {
+      if (fileCreatorRef.current) {
+        fileCreatorRef.current.createFile();
+      }
+    };
+
     const navItems = [
         {
             name: 'File',
@@ -257,6 +208,7 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab 
                 },
                 {
                     name: 'Save As',
+                    
                 },
                 {
                     name: 'Add to Pattern Library',
@@ -317,6 +269,10 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab 
                 {
                     name: 'Generate Code',
                 },
+                {
+                    name: 'Generate STP File',
+                    onClick: handleCreateFile,
+                },
             ],
         },
         {
@@ -360,6 +316,10 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab 
             isExpandable: true,
             child: [
                 {
+                    name: 'Machine Setting',
+                    onClick:handleMachineSettingModelOpen
+                },
+                {
                     name: 'Post Processor',
                 },
             ],
@@ -376,6 +336,7 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab 
         onCreateNewFile(dimensions);
         setIsModalOpen(false);
     };
+
 
     const theme = useTheme();
     let isMatch = Components.useMediaQuery(theme.breakpoints.down('xl'));
@@ -511,6 +472,7 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab 
                         />
                     </div>
                 </Components.DialogContent>
+
                 <Components.DialogActions>
                     <Components.Button onClick={handleConfirmCloseModal} variant="outlined"
                         sx={{
@@ -539,6 +501,8 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab 
                 </Components.DialogActions>
             </Components.Dialog>
             <NewfileModal open={isModalOpen} onClose={handleNewFileCloseModal} onSubmit={handleModelSubmit} />
+            <MachineSettingModel open={isMachineSettingModel} onClose={handleMachineSettingModelClose} />
+            <FileCreator ref={fileCreatorRef} dashboardData={dashboardData} />
             <input
                 type="file"
                 ref={fileInputRef}

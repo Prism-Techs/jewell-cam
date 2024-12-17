@@ -2,6 +2,7 @@
 import React from "react";
 import Components from "../../../theme/master-file-material";
 import ImagePopover from "../popover/ImagePopover";
+import theme from "../../../theme/theme";
 const Box2 = ({ storedData, handleImageClick }) => {
   return (
     <div className="box2">
@@ -9,7 +10,7 @@ const Box2 = ({ storedData, handleImageClick }) => {
         <Components.Typography
           align="center"
           gutterBottom
-          sx={{ background: "#bed2e7", fontWeight: "bold" }}
+          sx={{ background: theme.palette.light_background, fontWeight: "bold" }}
         >
           Pattern Library
         </Components.Typography>

@@ -1,38 +1,27 @@
 import { createTheme,responsiveFontSizes } from '@mui/material';
-
 const theme = responsiveFontSizes(createTheme({
     spacing:4,
     typography:{
         fontFamily:[
             "Montserrat "
         ],
-        fontSize:14
+        fontSize:14,
     },
     palette:{
-        background:{
-            default:'#9eb4c7',
-        },
-        primary:{
-            main:'#5c7f91',
-            dark:'#375995',
-        },
-        secondary:{
-            main:'#5DBBFF',
-            dark:'#aecaf7'
-        },
-        text:{
-            primary:'#000000', 
-            // secondary:'#677fa9' 
-            secondary:'#000000' 
-        },
+        light_background:'#bed2e7',
+        button:"#089c84",
+        card_background:'#a0bcdd',
+        table_header:'#ffffff',
+        table_search_add_background:'#87a5a7',
         white:'#FFFFFF',
+        delete_color:'red',
         black:'#000000',
-        delete_color:'#e76c6c',
-        table_header:'#9eb4c7',
         table_odd: '#eeeeeeef',
         tbale_even: '#ffffff',
-        fontSize16: '16px',
+        bold: 'bold',
+        light_skinny:'#f9e9cf',
+        fontSize16:16
     }
 }))
 
-export default theme;
+export default theme;   

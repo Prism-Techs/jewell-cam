@@ -236,7 +236,7 @@ const ArcCanvas = ({ params, localCoordinates, setLocalCoordinates, SetcanvasImg
                     if (cut_y < (cut_y_start-BangleHeight_29)) {
                         cut_y = cut_y + BangleHeight_29;
                     }
-                    console.log("curve path", CurvePath, 'Y1=', Y1,"Y3=", math.abs(Y1/ Dy), "Dy=", Dy)
+                    // console.log("curve path", CurvePath, 'Y1=', Y1,"Y3=", math.abs(Y1/ Dy), "Dy=", Dy)
                 }
                 if (CurvePath =='Straight') {
                     cut_x += XPitchWith_29;

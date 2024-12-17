@@ -64,7 +64,7 @@
 .content {
   display: flex;
   flex: 4; /* Takes 4 units of available space */
-  background-color: #bed2e7;
+  background-color: root.$light_background;
 }
 // .box1 {
 //   background-color: #fff;
@@ -101,7 +101,7 @@
 }
 
 .icon:hover {
-  background-color: root.$light-primary-color;
+  background-color: root.$light_background;
   color: #000;
   transform: translateX(5px); /* Slight slide effect */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -245,7 +245,7 @@
   height: 100%
 }
 .multilayer{
-  background-color: root.$light-primary-color;
+  background-color: root.$light_background;
 }
 .buttonborder{
   border: '1px solid transparent';

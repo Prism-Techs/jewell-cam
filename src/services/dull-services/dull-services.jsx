@@ -6,3 +6,9 @@ export const get_dull_master = () => {
 export const get_patterns = (dullid) => { 
   return instance.get(`/dull/patterns/?dullid=${dullid}`);
 };
+export const create_patterns = (data) => { 
+  return instance.post(`/dull/patterns/`,data);
+};
+export const get_single_pattern = (id) => { 
+  return instance.get(`/dull/patterns/${id}/`);
+};

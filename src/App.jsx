@@ -22,10 +22,10 @@ function App() {
         {/* <Navbar />  */}
         <Routes>
           {/* Add your routes here */}
-          {/* <Route path="/" element={<Protected />} > */}
+          <Route path="/" element={<Protected />} >
             <Route path="/select-project" element={<ProjectSelectionPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
-          {/* </Route> */}
+          </Route>
             <Route path="/auth/*" element={<AuthRoute />} />
         </Routes>
 

@@ -38,9 +38,9 @@ const ProjectSelectionPage = () => {
             <Button variant="contained" color="primary" onClick={handleNewProject}>
                 New Project
             </Button>
-            <Button variant="contained" color="secondary" onClick={handleExistingProject} style={{ marginLeft: '20px' }}>
+            {/* <Button variant="contained" color="secondary" onClick={handleExistingProject} style={{ marginLeft: '20px' }}>
                 Existing Project
-            </Button>
+            </Button> */}
             {isModalOpen && (
                 <NewModel 
                     open={isModalOpen} 

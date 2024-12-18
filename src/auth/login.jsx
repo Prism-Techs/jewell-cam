@@ -41,7 +41,8 @@ function LoginPage() {
             });
             setLoading(false);
 
-            navigate('/dashboard', { replace: true });
+            // navigate('/dashboard', { replace: true });
+            navigate('/select-project', { replace: true });
         } catch (error) {
             console.log("first case");
             

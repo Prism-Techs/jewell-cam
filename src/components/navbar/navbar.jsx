@@ -1,15 +1,16 @@
 import React, { useRef ,useState } from 'react';
-import { NavLink } from 'react-router-dom'; // Import NavLink
 import './Navbar.scss'; // Import the updated SCSS file
 import style from './navbar.module.scss';
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import NewfileModal from '../models/newfilemodel/newfilemodel'; // Ensure this component is properly imported
 import { useMediaQuery, useTheme } from '@mui/material';
 import Components from '../../theme/master-file-material';
-import logo from '../../theme/img/Vekaria_logo.png';
-import { useNavigate } from 'react-router-dom';
+// import logo from '../../theme/img/Vekaria_logo.png';
+import { getUserDetails, LoggedOut} from "../../services/authenticate";
 import FileCreator from '../common/FileCreator/fileCreate';
 import MachineSettingModel from '../models/MachineSettingModel/machine-setting-model';
-const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab }) => {
+import { create_patterns } from '../../services/dull-services/dull-services';
+const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,DullIdGet }) => {
     const navigate = useNavigate();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [drawer, setDrawer] = useState(false);
@@ -30,9 +31,11 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab 
     const handleBackground = () => {
         setActiveTab('background')
     }
+
     const handleTurning = () => {
         setActiveTab('turning')
     }
+
     const handleDesign = () => {
         setActiveTab('design')
     }
@@ -96,74 +99,45 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab 
         navigate('/');
     };
 
-    const handleSaveToLibrary = () => {
-        const check_type = dashboardData?.dull_type;
-        console.log(dashboardData, "check dashboard data");
-        
-        // Validation
+    //save pattern in library
+    const handleSaveToLibrary = () => {      
+        console.log(dashboardData);
+          
         if (!dashboardData) {
             console.error("No dashboard data to save");
             return;
         }
+    
+        const dullid = DullIdGet; 
+        let pattern_name = patternName; 
+    
+        pattern_name = pattern_name.replace(/\s+/g, ''); // This removes all spaces
         
-        const dullType = check_type;
-        const keyUpdate = { ...dashboardData, pattern_type: patternName };
-        
-        // Add timestamp to track when the entry was added
-        const dataToSave = {
-            ...keyUpdate,
-            timestamp: new Date().toISOString()
+        const formattedDataUrl = `data:image/png,name:${pattern_name}.png;base64,${dashboardData.canvas_img}`;
+        const attach= [formattedDataUrl]
+        const multipass= dashboardData.multipass
+        const tool_dia= dashboardData.tool_dia
+        const tool_v_angle= dashboardData.tool_v_angle
+        const xmargin= dashboardData.xmargin
+
+        const postData = {
+            pattern_name,
+            multipass,
+            dullid,
+            attach,
+            tool_dia,
+            tool_v_angle,
+            xmargin    
         };
-        
-        try {
-            const storageKey = dullType || "Default";
-            let existingData = localStorage.getItem(storageKey);
-            let dataArray = [];
-            
-            if (existingData) {
-                try {
-                    dataArray = JSON.parse(existingData);
-                    
-                    if (!Array.isArray(dataArray)) {
-                        console.warn(`Data in localStorage for ${storageKey} is not an array. Creating new array.`);
-                        dataArray = [];
-                    }
-                    
-                    // Optional: Check for duplicates before adding
-                    const isDuplicate = dataArray.some(item => 
-                        item.pattern_type === dataToSave.pattern_type
-                    );
-                    
-                    if (isDuplicate) {
-                        console.warn("Pattern with this name already exists");
-                        // Optional: You can handle duplicate cases here
-                        // For example, update existing entry or show warning to user
-                    }
-                    
-                    dataArray.push(dataToSave);
-                } catch (parseError) {
-                    console.error("Error parsing existing data:", parseError);
-                    dataArray = [dataToSave];
-                }
-            } else {
-                dataArray = [dataToSave];
-            }
-            
-            // Check localStorage size limit before saving
-            const dataString = JSON.stringify(dataArray);
-            if (dataString.length * 2 > 5242880) { // 5MB limit
-                console.error("localStorage size limit exceeded");
-                // Handle the error appropriately
-                return;
-            }
-            
-            localStorage.setItem(storageKey, dataString);
-            console.log(`Data saved successfully under key: ${storageKey}`);
-            
-        } catch (error) {
-            console.error("Error saving data to localStorage:", error);
-        }
-        
+    
+        create_patterns(postData)
+            .then(response => {
+                console.log("Pattern saved successfully:", response);
+            })
+            .catch(error => {
+                console.error("Error saving pattern:", error);
+            });
+
         setIsConfirmModalOpen(false);
         setPatternName('');
     };
@@ -177,7 +151,6 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab 
         link.href = URL.createObjectURL(blob);
         link.download = "dashboardData.txt"; // Name of the file
         link.click();
-
     }
 
     const fileCreatorRef = useRef(null);
@@ -326,17 +299,11 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab 
         },
     ];
 
-    const [selectedMenu, setSelectedMenu] = useState(navItems[0]);
-
-    const handleMenuClick = (item) => {
-        setSelectedMenu(item); // Update the selected menu
-    };
 
     const handleModelSubmit = (dimensions) => {
         onCreateNewFile(dimensions);
         setIsModalOpen(false);
     };
-
 
     const theme = useTheme();
     let isMatch = Components.useMediaQuery(theme.breakpoints.down('xl'));
@@ -348,7 +315,7 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab 
                 <div className="navbar">
                     <div className="logo-container d-flex align-items-center p-2">
                         <NavLink to={'/dashboard'} className={`${style.company_name} text-primary`}>
-                            <img src={logo} alt="Vekaria" className={`${style.imgClass}`} />
+                            <img src={require('../../theme/img/Vekaria_logo.png')} alt="Vekaria" className={`${style.imgClass}`} />
                         </NavLink>
                     </div>
 
@@ -375,7 +342,6 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab 
                                                                 <NavLink
                                                                     style={{ fontSize: '14px' }}
                                                                     to={childItem.route}
-                                                                    // activeClassName="active-link"
                                                                     className="nav-link"
                                                                 >
                                                                     <div className="d-flex justify-content-between">
@@ -393,7 +359,6 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab 
                                         </li>
                                     ) : item.permission && !item.isExpandable ? (
                                         <NavLink
-                                            // activeClassName ="active-link"
                                             to={item.route}
                                             className="nav-link py-2 px-3"
                                             key={index}
@@ -404,6 +369,7 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab 
                                 )}
                             </ul>
                         </div>
+
                     ) : (
                         <></>
                     )}
@@ -454,6 +420,14 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab 
                             )}
                         </ul>
                     </Components.Drawer>
+                    <Components.Tooltip title="Logout" arrow>
+                            <Link to={"/auth"} replace onClick={() => LoggedOut(navigate)}>
+                                <Components.IconButton>
+                                    <Components.Icons.LogoutOutlined className=" text-black account_icon " />
+                                </Components.IconButton>
+                            </Link>
+                        </Components.Tooltip>
+
                 </div>
             </nav>
 

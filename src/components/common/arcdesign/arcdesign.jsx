@@ -301,7 +301,13 @@ const ArcCanvas = ({ params, localCoordinates, setLocalCoordinates, SetcanvasImg
 
         // Generate the image URL from the cropped canvas
         const croppedImageUrl = offscreenCanvas.toDataURL('image/png');
-        SetcanvasImg(croppedImageUrl);  // Store the cropped image URL
+        const base64ImageData = croppedImageUrl.split(',')[1];  // Get only the Base64 data part
+
+        // Create the custom formatted data URL (with name and Base64 content)
+        const formattedDataUrl = `data:image/png,name:pattern.png;base64,${base64ImageData}`;
+    
+        // Store the formatted data URL
+        SetcanvasImg(base64ImageData);
 
     }, [SetcanvasImg,params, canvasScale, translate]);
 

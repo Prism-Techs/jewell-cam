@@ -13,6 +13,7 @@ import Box1 from "../../components/common/box1/box1";
 import Box2 from "../../components/common/box2/box2";
 import TurningPage from "../../components/common/TurningPage/Turning";
 import DesignPage from "../../components/common/DesignPage/design";
+import { get_single_pattern } from "../../services/dull-services/dull-services";
 const Dashboard = () => {
     const [isOpenColorModel, setOpColorModel] = useState(false);
     const [selectedColorName, setSelectedColorName] = useState(null);
@@ -23,6 +24,7 @@ const Dashboard = () => {
     const [localCoordinates, setLocalCoordinates] = useState({ x: 0, y: 0 });
     const [activeTab, setActiveTab] = useState('background');
     const [activeIcon, setActiveIcon] = useState('Wall Dull');
+    const [selectedDullId, setSelectedDullId] = useState(null); // State to hold the dull_id
     const [storedData, setStoredData] = useState([])
 
     const colorMapping = [
@@ -199,68 +201,64 @@ const Dashboard = () => {
 
     const formData = watch();
 
-    const handleImageClick = (index) => {
-        // Retrieve the formData from localStorage
-        const formData = JSON.parse(localStorage.getItem(activeIcon));
-
-
-        if (formData) {
-            // Retrieve the data based on the index
-            const clickedData = formData[index];
-
-            if (clickedData) {
-                // Reset the form with clickedData values
-                reset({
-                    bangle_width: tabs["width"],
-                    bangle_diameter: tabs["diameter"],
-                    bangle_type: tabs["type"],
-                    bangle_height: tabs["height"],
-                    position: tabs["position"],
-                    tool_dia: clickedData.tool_dia || 10, // You can provide a default if necessary
-                    tool_v_angle: clickedData.tool_v_angle || 120, // Default value if missing
-                    pattern_type: clickedData.pattern_type || "", // Default value
-                    canvas_img: clickedData.canvas_img || canvasImg, // Default image
-                    dull_type: activeIcon,
-                    xmargin: 2,
-                    multipass: clickedData.multipass || [
-                        {
-                            id: 0,
-                            xpitch: 4,
-                            // xmargin: 2,
-                            no_of_cuts: 50,
-                            cut_depth: 0.2,
-                            spindle_speed: 9000,
-                            cut_angle1: 0,
-                            long_angle: 45,
-                            x_shift_start: 0,
-                            y_shift_start: 0,
-                            angle_of_cutline: "",
-                            curve_path: "",
-                            curve_path_width: "",
-                            curve_path_height: "",
-                            part_x: "",
-                            part_y: "",
-                            theme_color_light: "#e8dca2",
-                            theme_color_dark: "#bca323"
-                        },
-                    ], // Set default multipass or clicked multipass
-                });
-            }
-        } else {
-            console.log('No form data found in localStorage');
-        }
+    const handleDullIdSelect = (dull_id,dull_type) => {
+        console.log(dull_type);
+        setActiveIcon(dull_type)
+        setSelectedDullId(dull_id);
     };
+    const handleImageClick = (id) => {
+        get_single_pattern(id)
+            .then((response) => {            
+                if (response && response.data) {
+                    const clickedData = response.data;
+                    console.log(clickedData);
+                    
 
-    const handleIconClick = (iconName) => {
-        const GetFormData = JSON.parse(localStorage.getItem(iconName)) || [];
-        setStoredData(GetFormData)
-        console.log(iconName);
+                    if (clickedData) {
+                        // Reset the form with clickedData values
+                        reset({
+                            bangle_width: tabs["width"],
+                            bangle_diameter: tabs["diameter"],
+                            bangle_type: tabs["type"],
+                            bangle_height: tabs["height"],
+                            position: tabs["position"],
+                            tool_dia: parseInt(clickedData.tool_dia) || 10, // You can provide a default if necessary
+                            tool_v_angle: parseInt(clickedData.tool_v_angle) || 120, // Default value if missing
+                            pattern_type: clickedData.pattern_type || "", // Default value
+                            canvas_img: clickedData.canvas_img || canvasImg, // Default image
+                            dull_type: activeIcon,
+                            xmargin: parseInt(clickedData.xmargin) || 2,
+                            multipass: clickedData.multipass || [
+                                {
+                                    id: 0,
+                                    xpitch: 4,
+                                    // xmargin: 2,
+                                    no_of_cuts: 50,
+                                    cut_depth: 0.2,
+                                    spindle_speed: 9000,
+                                    cut_angle1: 0,
+                                    long_angle: 45,
+                                    x_shift_start: 0,
+                                    y_shift_start: 0,
+                                    angle_of_cutline: "",
+                                    curve_path: "",
+                                    curve_path_width: "",
+                                    curve_path_height: "",
+                                    part_x: "",
+                                    part_y: "",
+                                    theme_color_light: "#e8dca2",
+                                    theme_color_dark: "#bca323"
+                                },
+                            ], // Set default multipass or clicked multipass
+                        });
+                    }
+                }
+            })
+            .catch((error) => {
+                console.error("Error fetching patterns data:", error);
+        });
         
-        setValue("dull_type", iconName);
-        setActiveIcon(iconName);
     };
-
-
     return (
         <>
             <div className="main-container">
@@ -270,14 +268,13 @@ const Dashboard = () => {
                     dashboardData={formData}
                     setActiveTab={setActiveTab}
                     setOpenFileData={setOpenFileData}
+                    DullIdGet = {selectedDullId}
                 ></Navbar>
                 <div className="content">
 
                     {activeTab === 'background' && (
                         <>
-                            <Box1 handleIconClick={handleIconClick} activeIcon={activeIcon} />
-               
-                            <Box2 storedData={storedData} handleImageClick={handleImageClick}/>
+                            <Box2 onDullIdSelect={handleDullIdSelect} handleImageClick={handleImageClick}/>
 
                             <div className="row box3">
                                 <div className="d-flex justify-content-between p-1">
@@ -515,7 +512,7 @@ const Dashboard = () => {
                                                                         {...register(`multipass[${index}].long_angle`)}
                                                                         type="number"
                                                                         className="no-spinner"
-                                                                        disabled={activeIcon == 'Wall Dull'}
+                                                                        disabled={activeIcon === 'Wall'}
                                                                     />
                                                                 </div>
                                                                 <div className="parameters-div">

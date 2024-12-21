@@ -5,7 +5,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import NewfileModal from '../models/newfilemodel/newfilemodel'; // Ensure this component is properly imported
 import { useMediaQuery, useTheme } from '@mui/material';
 import Components from '../../theme/master-file-material';
-import logo from '../../../public/assets/img/Vekaria_logo.png';
+// import logo from '../../../public/assets/img/vekaria_logo.png';
 import { getUserDetails, LoggedOut} from "../../services/authenticate";
 import FileCreator from '../common/FileCreator/fileCreate';
 import MachineSettingModel from '../models/MachineSettingModel/machine-setting-model';
@@ -389,7 +389,7 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
                 <div className="navbar">
                     <div className="logo-container d-flex align-items-center" style={{margin:"0px 0px 25px 0px"}}>
                         <NavLink to={'/dashboard'} className={`${style.company_name} text-primary`}>
-                            <img src={logo} alt="Vekaria" className={`${style.imgClass}`} />
+                            <img src={'assets/img/vekaria_logo.png'} alt="Vekaria" className={`${style.imgClass}`} />
                         </NavLink>
                     </div>
 

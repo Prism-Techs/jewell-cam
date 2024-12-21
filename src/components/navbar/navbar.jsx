@@ -5,18 +5,24 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import NewfileModal from '../models/newfilemodel/newfilemodel'; // Ensure this component is properly imported
 import { useMediaQuery, useTheme } from '@mui/material';
 import Components from '../../theme/master-file-material';
-// import logo from '../../theme/img/Vekaria_logo.png';
+import logo from '../../../public/assets/img/Vekaria_logo.png';
 import { getUserDetails, LoggedOut} from "../../services/authenticate";
 import FileCreator from '../common/FileCreator/fileCreate';
 import MachineSettingModel from '../models/MachineSettingModel/machine-setting-model';
-import { create_patterns } from '../../services/dull-services/dull-services';
-const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,DullIdGet }) => {
+import { create_patterns} from '../../services/dull-services/dull-services';
+import DesignModel from '../models/DesignModel/design-model';
+import { create_design } from '../../services/dull-services/dull-services';
+import { toast } from 'react-toastify';
+const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,DullIdGet , updateDesignData}) => {
     const navigate = useNavigate();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [drawer, setDrawer] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
     const [isMachineSettingModel, setIsMachineSettingModel] = useState(false)
+    const [isDesignModel, setDesignModel] = useState(false)
+    const [isSaveAsModel, setisSaveAsModel] = useState(false)
     const [patternName, setPatternName] = useState('');
+    const [designname, setDesignName] = useState('');
 
     const handleMachineSettingModelOpen= (e) => {
         e.preventDefault();
@@ -35,7 +41,7 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
     const handleTurning = () => {
         setActiveTab('turning')
     }
-
+    
     const handleDesign = () => {
         setActiveTab('design')
     }
@@ -43,10 +49,11 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
     const fileInputRef = useRef(null);
 
     // Function to trigger the hidden file input click event
-    const handleOpenFile = () => {
-        if (fileInputRef.current) {
-            fileInputRef.current.click(); // Programmatically open file dialog
-        }
+    const handleDesignModelOpen = () => {
+        setDesignModel(true);
+    };
+    const handleDesignModelClose = () => {
+        setDesignModel(false);
     };
 
     // Function to handle file selection and read file content
@@ -83,6 +90,14 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
 
     const handleConfirmCloseModal = () => {
         setIsConfirmModalOpen(false);
+    };
+    const handleSaveAsOpenModal = (e) => {
+        e.preventDefault();
+        setisSaveAsModel(true);
+    };
+
+    const handleSaveAsCloseModal = () => {
+        setisSaveAsModel(false);
     };
 
     const handleNewFileOpenModal = (e) => {
@@ -161,6 +176,59 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
       }
     };
 
+    const handleSaveAsDesign = () => {
+            
+        const formData = dashboardData
+        let Design_Name = designname; 
+
+        Design_Name = Design_Name.replace(/\s+/g, ''); // This removes all spaces
+        const formattedDataUrl = `data:image/png,name:${Design_Name}.png;base64,${formData.canvas_img}`;
+        const { design_id, ...restOfDashboardData } = dashboardData;
+        const updatedata = {
+            ...restOfDashboardData,
+            design_name: designname,
+            attach:[formattedDataUrl],
+            
+        }
+        console.log(updatedata);
+        
+        create_design(updatedata)
+            .then(response => {
+                const data = response.data;
+            
+                const encryptedKey = data.design_id;
+
+                const currentUrl = new URL(window.location.href);
+
+                const searchParams = new URLSearchParams(currentUrl.search);
+
+                if (searchParams.has('design_id')) {
+                    searchParams.delete('design_id');
+                }
+
+                // Add the new 'design_id' to the query string
+                searchParams.append('design_id', encryptedKey);
+
+                // Update the URL without reloading the page
+                const newUrl = `${currentUrl.pathname}?${searchParams.toString()}`;
+                window.history.pushState({ path: newUrl }, '', newUrl);
+
+                toast.success("Design saved successfully", {
+                    position: "top-right",
+                    autoClose: 2500,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: false,
+                    draggable: false,
+                    progress: undefined,
+                    theme: "colored",
+                });
+            })
+            .catch(error => {
+                console.error("Error saving pattern:", error);
+            });
+    }
+
     const navItems = [
         {
             name: 'File',
@@ -173,7 +241,7 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
                 },
                 {
                     name: 'Open',
-                    onClick: handleOpenFile,
+                    onClick: handleDesignModelOpen,
                 },
                 {
                     name: 'Save',
@@ -181,6 +249,7 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
                 },
                 {
                     name: 'Save As',
+                    onClick: handleSaveAsOpenModal,
                     
                 },
                 {
@@ -189,12 +258,12 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
                 },
             ],
         },
-        {
-            name: 'Edit',
-            permission: true,
-            isExpandable: true,
-            child: [],
-        },
+        // {
+        //     name: 'Edit',
+        //     permission: true,
+        //     isExpandable: true,
+        //     child: [],
+        // },
         {
             name: 'Operations',
             permission: true,
@@ -214,23 +283,23 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
                 },
             ],
         },
-        {
-            name: 'Project',
-            permission: true,
-            isExpandable: true,
-            child: [
-                {
-                    name: 'Select Project',
-                    onClick: handleProjectSelectMenuClick,
-                },
-            ],
-        },
-        {
-            name: 'Clipart Library',
-            permission: true,
-            isExpandable: true,
-            child: [],
-        },
+        // {
+        //     name: 'Project',
+        //     permission: true,
+        //     isExpandable: true,
+        //     child: [
+        //         {
+        //             name: 'Select Project',
+        //             onClick: handleProjectSelectMenuClick,
+        //         },
+        //     ],
+        // },
+        // {
+        //     name: 'Clipart Library',
+        //     permission: true,
+        //     isExpandable: true,
+        //     child: [],
+        // },
         {
             name: 'Tool Path',
             permission: true,
@@ -248,18 +317,18 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
                 },
             ],
         },
-        {
-            name: 'Window',
-            permission: true,
-            isExpandable: true,
-            child: [],
-        },
-        {
-            name: 'Help',
-            permission: true,
-            isExpandable: true,
-            child: [],
-        },
+        // {
+        //     name: 'Window',
+        //     permission: true,
+        //     isExpandable: true,
+        //     child: [],
+        // },
+        // {
+        //     name: 'Help',
+        //     permission: true,
+        //     isExpandable: true,
+        //     child: [],
+        // },
         {
             name: 'Object Type',
             permission: true,
@@ -309,23 +378,28 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
     let isMatch = Components.useMediaQuery(theme.breakpoints.down('xl'));
     isMatch = useMediaQuery('(max-width:1200px)');
 
+    const handleDesignSelect = (designData) => {
+        console.log(designData);
+        updateDesignData(designData)
+    };
+
     return (
         <header>
-            <nav style={{ boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+            <nav >
                 <div className="navbar">
-                    <div className="logo-container d-flex align-items-center p-2">
+                    <div className="logo-container d-flex align-items-center" style={{margin:"0px 0px 25px 0px"}}>
                         <NavLink to={'/dashboard'} className={`${style.company_name} text-primary`}>
-                            <img src={require('../../theme/img/Vekaria_logo.png')} alt="Vekaria" className={`${style.imgClass}`} />
+                            <img src={logo} alt="Vekaria" className={`${style.imgClass}`} />
                         </NavLink>
                     </div>
 
                     {!isMatch ? (
                         <div className="nav-links-container">
-                            <ul className="d-flex mb-0 p-0 dropdown">
+                            <ul className="d-flex p-0 dropdown">
                                 {navItems.map((item, index) =>
                                     item.permission && item.isExpandable ? (
                                         <li key={index} className="li-items">
-                                            <div className="nav-link dropdown-toggle py-1 px-2">{item.name}</div>
+                                            <div className="nav-link py-1 px-2">{item.name}</div>
                                             {item.child && (
                                                 <ul className="sub-menu">
                                                     {item.child.map((childItem, childIndex) => (
@@ -420,14 +494,25 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
                             )}
                         </ul>
                     </Components.Drawer>
+                    <div className="d-flex justify-content-center">
+
                     <Components.Tooltip title="Logout" arrow>
-                            <Link to={"/auth"} replace onClick={() => LoggedOut(navigate)}>
-                                <Components.IconButton>
-                                    <Components.Icons.LogoutOutlined className=" text-black account_icon " />
+                            <Link >
+                                <Components.IconButton sx={{margin:"0px 0px 15px 0px"}}>
+                                    <Components.Icons.AccountCircle className=" text-black " />
                                 </Components.IconButton>
                             </Link>
-                        </Components.Tooltip>
-
+                    </Components.Tooltip>
+                 
+                    <Components.Tooltip title="Logout" arrow>
+                            <Link to={"/auth"} replace onClick={() => LoggedOut(navigate)}>
+                                <Components.IconButton sx={{margin:"0px 0px 15px 0px"}}>
+                                    <Components.Icons.Logout className=" text-black " />
+                                </Components.IconButton>
+                            </Link>
+                    </Components.Tooltip>
+                    </div>
+                    
                 </div>
             </nav>
 
@@ -474,9 +559,54 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
                     </Components.Button>
                 </Components.DialogActions>
             </Components.Dialog>
+            <Components.Dialog open={isSaveAsModel} onClose={handleSaveAsCloseModal} >
+                {/* <Components.DialogTitle>{<b>Confirm</b>}</Components.DialogTitle> */}
+                <Components.DialogContent>
+                    <div className="modal-content">
+                        <h6 style={{ textAlign: 'left' }}>Please enter a Design name:</h6>
+
+                        <input
+                            type="text"
+                            value={designname}
+                            onChange={(e) => setDesignName(e.target.value)}
+                            placeholder="Enter Design name"
+                            className="pattern-input"
+                        />
+                    </div>
+                </Components.DialogContent>
+
+                <Components.DialogActions>
+                    <Components.Button onClick={handleSaveAsCloseModal} variant="outlined"
+                        sx={{
+                            backgroundColor: '#bed2e7',
+                            color: 'black',
+                            '&:hover': {
+                                backgroundColor: '#dae2eb',
+                            },
+                        }}
+                    >
+                        Cancel
+                    </Components.Button>
+                    <Components.Button
+                        onClick={() => { handleSaveAsDesign() }}
+                        variant="outlined"
+                        sx={{
+                            backgroundColor: '#bed2e7',
+                            color: 'black',
+                            '&:hover': {
+                                backgroundColor: '#dae2eb',
+                            },
+                        }}
+                    >
+                        Ok
+                    </Components.Button>
+                </Components.DialogActions>
+            </Components.Dialog>
+
             <NewfileModal open={isModalOpen} onClose={handleNewFileCloseModal} onSubmit={handleModelSubmit} />
             <MachineSettingModel open={isMachineSettingModel} onClose={handleMachineSettingModelClose} />
             <FileCreator ref={fileCreatorRef} dashboardData={dashboardData} />
+            <DesignModel open={isDesignModel} onClose={handleDesignModelClose} onDesignSelect={handleDesignSelect}/>
             <input
                 type="file"
                 ref={fileInputRef}

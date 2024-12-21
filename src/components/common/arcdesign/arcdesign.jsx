@@ -345,15 +345,15 @@ const ArcCanvas = ({ params, localCoordinates, setLocalCoordinates, SetcanvasImg
         const canvas = canvasRef.current;
         const mousePos = getMousePos(canvas, event);
 
-        const centerX = (700 - BangleWidth_29) / 2;
-        const centerY = (610 - BangleHeight_29) / 2;
+        const centerX = (CANVAS_WIDTH - BangleWidth_29) / 2;
+        const centerY = (FIXED_CANVAS_HEIGHT - BangleHeight_29) / 2;
         const Position = params.position;
         const width = BangleWidthWithout_29 || 0;
         const height = BangleHeightWithout_29 || 0;
         // Check if the mouse is inside the rectangle
         if (
-            mousePos.x >= centerX && mousePos.x <= centerX + BangleWidth_29 &&
-            mousePos.y >= centerY && mousePos.y <= centerY + BangleHeight_29
+            mousePos.x >= (centerX * 0.9) && mousePos.x <= (centerX * 1.1) + BangleWidth_29 &&
+            mousePos.y >= (centerY * 0.8) && mousePos.y <= (centerY *1.2) + BangleHeight_29
         ) {
             // Calculate the local coordinates relative to the rectangle's top-left corner
             let localX = mousePos.x - centerX;

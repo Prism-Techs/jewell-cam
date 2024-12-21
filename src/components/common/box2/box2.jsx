@@ -54,13 +54,16 @@ const Box2 = ({ onDullIdSelect ,multipassData, handleImageClick}) => {
         </div>
         <div className="box2">
             <div className="right-div">
-            <Components.Typography
+                <div className="d-flex justify-content-center"style={{ background: theme.palette.light_background, fontWeight: "bold", fontSize:"12px" }} >
+                Pattern Library : {activeName}
+                </div>
+            {/* <Components.Typography
                 align="center"
                 gutterBottom
                 sx={{ background: theme.palette.light_background, fontWeight: "bold" }}
             >
-                Pattern Library : ({activeName}) 
-            </Components.Typography>
+                Pattern Library : {activeName}
+            </Components.Typography> */}
             </div>
 
             <div className="row">

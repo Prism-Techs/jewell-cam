@@ -3,7 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Dashboard from "./pages/dashboard/dashboard";
 import React, { useEffect } from 'react';
 import Navbar from "./components/navbar/navbar";
-import ProjectSelectionPage from "./pages/project-selection/ProjectSelectionPage";
+// import ProjectSelectionPage from "./pages/project-selection/ProjectSelectionPage";
 import LoginPage from "./auth/login";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -23,10 +23,12 @@ function App() {
         <Routes>
           {/* Add your routes here */}
           <Route path="/" element={<Protected />} >
-            <Route path="/select-project" element={<ProjectSelectionPage />} />
+            {/* <Route path="/select-project" element={<ProjectSelectionPage />} /> */}
             <Route path="/dashboard" element={<Dashboard />} />
           </Route>
             <Route path="/auth/*" element={<AuthRoute />} />
+            
+
         </Routes>
 
         

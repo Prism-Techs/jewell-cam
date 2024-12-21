@@ -6,14 +6,13 @@ import { useFieldArray, useForm } from "react-hook-form";
 import theme from "../../theme/theme";
 import ArcCanvas from "../../components/common/arcdesign/arcdesign";
 import { Popover, Box, Button, Typography } from '@mui/material';
-import FormatColorFill from '@mui/icons-material/FormatColorFill';
 import CurveCanvasComponent from "../../components/common/CurveCanvas/canvas_curve";
-import ImagePopover from "../../components/common/popover/ImagePopover";
-import Box1 from "../../components/common/box1/box1";
 import Box2 from "../../components/common/box2/box2";
 import TurningPage from "../../components/common/TurningPage/Turning";
 import DesignPage from "../../components/common/DesignPage/design";
-import { get_single_pattern } from "../../services/dull-services/dull-services";
+import { get_single_pattern, create_design, update_design } from "../../services/dull-services/dull-services";
+import { toast } from "react-toastify";
+import { Component } from "lucide-react";
 const Dashboard = () => {
     const [isOpenColorModel, setOpColorModel] = useState(false);
     const [selectedColorName, setSelectedColorName] = useState(null);
@@ -23,7 +22,7 @@ const Dashboard = () => {
     const [openfileData, setOpenFileData] = useState([]);
     const [localCoordinates, setLocalCoordinates] = useState({ x: 0, y: 0 });
     const [activeTab, setActiveTab] = useState('background');
-    const [activeIcon, setActiveIcon] = useState('Wall Dull');
+    const [activeIcon, setActiveIcon] = useState('Wall');
     const [selectedDullId, setSelectedDullId] = useState(null); // State to hold the dull_id
     const [storedData, setStoredData] = useState([])
 
@@ -49,10 +48,7 @@ const Dashboard = () => {
 
     const isPopoverOpen = Boolean(anchorEl); // Check if the popover is open
 
-    const [tabs, setTabs] = useState(() => {
-        const savedTabs = JSON.parse(localStorage.getItem("tabs")) || [];
-        return savedTabs;
-    });
+    const [tabs, setTabs] = useState([]);
 
     const {
         register,
@@ -64,11 +60,13 @@ const Dashboard = () => {
         formState: { errors },
     } = useForm({
         defaultValues: {
-            bangle_width: tabs["width"],
-            bangle_diameter: tabs["diameter"],
-            bangle_type: tabs["type"],
-            bangle_height: tabs["height"],
-            position: tabs["position"],
+            design_id: tabs["design_id"] || "",
+            design_name: tabs["design_name"] || "",
+            bangle_width: tabs['bangle_width'] || 20,
+            bangle_diameter: tabs['bangle_diameter'] || 63.64,
+            bangle_type: tabs['bangle_type'] || 'flat',
+            bangle_height: tabs['bangle_height'] || 200,
+            position: tabs['position'] || 'center',
             tool_dia: 10,
             tool_v_angle: 120,
             pattern_type: "",
@@ -129,24 +127,24 @@ const Dashboard = () => {
         }
     }, [canvasImg, setValue]);
 
-    // This function for store formData in localstorage 
     const onSubmitParameters = (data) => {
     };
 
     const handleModelSubmit = (data) => {
-        localStorage.removeItem("tabs"); // Clear old data
-        localStorage.setItem("tabs", JSON.stringify(data)); // Save new data
-        setTabs(data); // Update state with new tabs
-        console.log(data);
-
-        reset({
-            bangle_width: data['width'] || '',
-            bangle_diameter: data['diameter'] || '',
-            bangle_type: data['type'] || '',
-            bangle_height: data['height'] || '',
-            position: data['position'] || '',
-            tool_dia: 10,
-            tool_v_angle: 120,
+        
+        const formData = watch();
+        let pattern_name = formData.design_name; 
+    
+        pattern_name = pattern_name.replace(/\s+/g, ''); // This removes all spaces
+        const formattedDataUrl = `data:image/png,name:${pattern_name}.png;base64,${formData.canvas_img}`;
+        const updatedata = {
+            ...data,
+            dull_type: activeIcon,
+            bangle_type: data.type,
+            bangle_width: data.width,
+            bangle_diameter: data.diameter,
+            bangle_height: data.height,
+            attach:[formattedDataUrl],
             multipass: [
                 {
                     id: 0,
@@ -168,7 +166,136 @@ const Dashboard = () => {
                     theme_color_dark: "#bca323"
                 },
             ],
-        });
+        }
+        console.log(updatedata);
+        create_design(updatedata)
+            .then(response => {
+                const data = response.data;
+                setTabs(data);
+                console.log("Design saved successfully:", data.design_id);
+                reset({
+                    design_id: data.design_id || "",
+                    design_name: data.design_name || "",
+                    bangle_width: data.bangle_width || '',
+                    bangle_diameter: data.bangle_diameter || '',
+                    bangle_type: data.bangle_type || '',
+                    bangle_height: data.bangle_height || '',
+                    position: data.position || '',
+                    tool_dia: 10,
+                    tool_v_angle: 120,
+                    multipass: [
+                        {
+                            id: 0,
+                            xpitch: 4,
+                            no_of_cuts: 50,
+                            cut_depth: 0.1,
+                            spindle_speed: 9000,
+                            cut_angle1: 0,
+                            long_angle: 45,
+                            x_shift_start: 0,
+                            y_shift_start: 0,
+                            angle_of_cutline: "",
+                            curve_path: "Spiral",
+                            curve_path_width: 50,
+                            curve_path_height: 50,
+                            curve_y: "",
+                            part_y: "",
+                            theme_color_light: "#e8dca2",
+                            theme_color_dark: "#bca323"
+                        },
+                    ],
+                });
+                // Get the encrypted key (in this case, design_id)
+                const encryptedKey = data.design_id;
+
+                // Get current URL
+                const currentUrl = new URL(window.location.href);
+
+                // Use URLSearchParams to modify the query string
+                const searchParams = new URLSearchParams(currentUrl.search);
+
+                // Remove existing 'design_id' parameter if present
+                if (searchParams.has('design_id')) {
+                    searchParams.delete('design_id');
+                }
+
+                // Add the new 'design_id' to the query string
+                searchParams.append('design_id', encryptedKey);
+
+                // Update the URL without reloading the page
+                const newUrl = `${currentUrl.pathname}?${searchParams.toString()}`;
+                window.history.pushState({ path: newUrl }, '', newUrl);
+
+                toast.success("Design saved successfully", {
+                    position: "top-right",
+                    autoClose: 2500,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: false,
+                    draggable: false,
+                    progress: undefined,
+                    theme: "colored",
+                });
+            })
+            .catch(error => {
+                console.error("Error saving pattern:", error);
+            });
+    };
+    
+    const handleUpdateDesign = () => {
+        const currentUrl = new URL(window.location.href);
+        const searchParams = new URLSearchParams(currentUrl.search);
+        const designId = searchParams.get('design_id');  // Extract design_id from URL
+        if (!designId) {
+            toast.error("Design ID not found in the URL", {
+                position: "top-right",
+                autoClose: 2500,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: false,
+                draggable: false,
+                progress: undefined,
+                theme: "colored",
+            });
+            return;  // Exit if design_id is not present in the URL
+        }
+    
+        // Get specific keys from the form state using watch()
+        const formData = watch();
+        let pattern_name = formData.design_name; 
+    
+        pattern_name = pattern_name.replace(/\s+/g, ''); // This removes all spaces
+        const formattedDataUrl = `data:image/png,name:${pattern_name}.png;base64,${formData.canvas_img}`;
+        const updatedData = {
+            tool_dia: formData.tool_dia,
+            bangle_type: formData.bangle_type,
+            design_name: formData.design_name,
+            position: formData.position,
+            dull_type: activeIcon,
+            tool_v_angle: parseInt(formData.tool_v_angle),
+            xmargin: formData.xmargin,
+            multipass: formData.multipass,
+            attach:[formattedDataUrl]
+        };
+        console.log(updatedData);
+        
+        update_design(designId,updatedData)
+            .then(response => {
+                const data = response.data;
+                toast.success("Design update successfully", {
+                    position: "top-right",
+                    autoClose: 2500,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: false,
+                    draggable: false,
+                    progress: undefined,
+                    theme: "colored",
+                });
+            })
+            .catch(error => {
+                console.error("Error saving pattern:", error);
+            });
     };
 
     const addColumn = () => {
@@ -201,89 +328,140 @@ const Dashboard = () => {
 
     const formData = watch();
 
-    const handleDullIdSelect = (dull_id,dull_type) => {
+    const handleDullIdSelect = (dull_id, dull_type) => {
         console.log(dull_type);
         setActiveIcon(dull_type)
+        setValue('pattern_type', dull_type);
         setSelectedDullId(dull_id);
     };
+
     const handleImageClick = (id) => {
         get_single_pattern(id)
-            .then((response) => {            
+            .then((response) => {
                 if (response && response.data) {
                     const clickedData = response.data;
-                    console.log(clickedData);
-                    
-
                     if (clickedData) {
-                        // Reset the form with clickedData values
-                        reset({
-                            bangle_width: tabs["width"],
-                            bangle_diameter: tabs["diameter"],
-                            bangle_type: tabs["type"],
-                            bangle_height: tabs["height"],
-                            position: tabs["position"],
-                            tool_dia: parseInt(clickedData.tool_dia) || 10, // You can provide a default if necessary
-                            tool_v_angle: parseInt(clickedData.tool_v_angle) || 120, // Default value if missing
-                            pattern_type: clickedData.pattern_type || "", // Default value
-                            canvas_img: clickedData.canvas_img || canvasImg, // Default image
-                            dull_type: activeIcon,
-                            xmargin: parseInt(clickedData.xmargin) || 2,
-                            multipass: clickedData.multipass || [
-                                {
-                                    id: 0,
-                                    xpitch: 4,
-                                    // xmargin: 2,
-                                    no_of_cuts: 50,
-                                    cut_depth: 0.2,
-                                    spindle_speed: 9000,
-                                    cut_angle1: 0,
-                                    long_angle: 45,
-                                    x_shift_start: 0,
-                                    y_shift_start: 0,
-                                    angle_of_cutline: "",
-                                    curve_path: "",
-                                    curve_path_width: "",
-                                    curve_path_height: "",
-                                    part_x: "",
-                                    part_y: "",
-                                    theme_color_light: "#e8dca2",
-                                    theme_color_dark: "#bca323"
-                                },
-                            ], // Set default multipass or clicked multipass
-                        });
+                        setValue("tool_dia", parseInt(clickedData.tool_dia) || 10); // Default value if missing
+                        setValue("tool_v_angle", parseInt(clickedData.tool_v_angle) || 120); // Default value if missing
+                        setValue("xmargin", parseInt(clickedData.xmargin) || 2); // Default value if missing
+                        setValue("multipass", clickedData.multipass || [
+                            {
+                                id: 0,
+                                xpitch: 4,
+                                no_of_cuts: 50,
+                                cut_depth: 0.2,
+                                spindle_speed: 9000,
+                                cut_angle1: 0,
+                                long_angle: 45,
+                                x_shift_start: 0,
+                                y_shift_start: 0,
+                                angle_of_cutline: "",
+                                curve_path: "",
+                                curve_path_width: "",
+                                curve_path_height: "",
+                                part_x: "",
+                                part_y: "",
+                                theme_color_light: "#e8dca2",
+                                theme_color_dark: "#bca323"
+                            },
+                        ]); // Set default multipass or clicked multipass
                     }
                 }
             })
             .catch((error) => {
                 console.error("Error fetching patterns data:", error);
-        });
-        
+            });
     };
+
+    const handleUploadDesign = (data) => {
+        console.log(data);   
+        // Get the encrypted key (in this case, design_id)
+        const encryptedKey = data.design_id;
+
+        // Get current URL
+        const currentUrl = new URL(window.location.href);
+
+        // Use URLSearchParams to modify the query string
+        const searchParams = new URLSearchParams(currentUrl.search);
+
+        // Remove existing 'design_id' parameter if present
+        if (searchParams.has('design_id')) {
+            searchParams.delete('design_id');
+        }
+
+        // Add the new 'design_id' to the query string
+        searchParams.append('design_id', encryptedKey);
+
+        // Update the URL without reloading the page
+        const newUrl = `${currentUrl.pathname}?${searchParams.toString()}`;
+        window.history.pushState({ path: newUrl }, '', newUrl);
+        reset({
+            design_id: data.design_id || "",
+            design_name: data.design_name || "",
+            bangle_width: data.bangle_width || '',
+            bangle_diameter: data.bangle_diameter || '',
+            bangle_type: data.bangle_type || '',
+            bangle_height: data.bangle_height || '',
+            position: data.position || '',
+            tool_dia: data.tool_dia || 10,
+            tool_v_angle: data.tool_v_angle || 120,
+            multipass:data.multipass || 
+                [
+                    {
+                        id: 0,
+                        xpitch: 4,
+                        no_of_cuts: 50,
+                        cut_depth: 0.1,
+                        spindle_speed: 9000,
+                        cut_angle1: 0,
+                        long_angle: 45,
+                        x_shift_start: 0,
+                        y_shift_start: 0,
+                        angle_of_cutline: "",
+                        curve_path: "Spiral",
+                        curve_path_width: 50,
+                        curve_path_height: 50,
+                        curve_y: "",
+                        part_y: "",
+                        theme_color_light: "#e8dca2",
+                        theme_color_dark: "#bca323"
+                    },         
+                ]
+        });
+      };
+      
     return (
         <>
             <div className="main-container">
 
                 <Navbar
                     onCreateNewFile={handleModelSubmit}
+                    updateDesignData={handleUploadDesign}
                     dashboardData={formData}
                     setActiveTab={setActiveTab}
                     setOpenFileData={setOpenFileData}
-                    DullIdGet = {selectedDullId}
+                    DullIdGet={selectedDullId}
                 ></Navbar>
+                    {/* <p className="d-flex align-center justify-content-center" style={{ margin: "0px 0" }}>
+                           <strong>{watch("design_name")}</strong> 
+                       </p> */}
                 <div className="content">
 
                     {activeTab === 'background' && (
                         <>
-                            <Box2 onDullIdSelect={handleDullIdSelect} handleImageClick={handleImageClick}/>
+                            <Box2 onDullIdSelect={handleDullIdSelect} handleImageClick={handleImageClick} />
 
                             <div className="row box3">
                                 <div className="d-flex justify-content-between p-1">
                                     <label>
                                         <strong className="strong-class">Type :</strong>
-                                        <span className="text-class">  {watch('bangle_type')
-                                            .replace(/_/g, ' ') // Replace underscores with spaces
-                                            .replace(/\b\w/g, char => char.toUpperCase()) // Capitalize the first letter of each word
-                                        }</span>
+                                        <span className="text-class">
+                                            {watch('bangle_type')
+                                                ? watch('bangle_type')
+                                                    .replace(/_/g, ' ') // Replace underscores with spaces
+                                                    .replace(/\b\w/g, char => char.toUpperCase()) // Capitalize the first letter of each word
+                                                : ''}
+                                        </span>
                                     </label>
                                     <label>
                                         <strong className="strong-class">Width :</strong>
@@ -293,27 +471,28 @@ const Dashboard = () => {
                                         <strong className="strong-class">Diameter :</strong>
                                         <span className="text-class">{watch('bangle_diameter')}</span>
                                     </label>
-                                    <label>
+                                    {/* <label>
                                         <strong className="strong-class">Pattern :</strong>
                                         <span className="text-class">{watch('pattern_type')}</span>
-                                    </label>
+                                    </label> */}
                                 </div>
                                 <div className="">
                                     <ArcCanvas params={formData} localCoordinates={localCoordinates} setLocalCoordinates={setLocalCoordinates} SetcanvasImg={SetcanvasImg} />
                                 </div>
                                 <div className="col xy-cord">
                                     <div>
-                                        <span>X: <span className="text-class">{(localCoordinates.x.toFixed(2))}</span> </span>
-                                        <span style={{ marginLeft: '30px' }}>Y: <span className="text-class">{(localCoordinates.y.toFixed(2))}</span></span>
+                                        <span className="strong-class">X: <span className="text-class">{(localCoordinates.x.toFixed(2))}</span> </span>
+                                        <span className="strong-class" style={{ marginLeft: '30px' }}>Y: <span className="text-class">{(localCoordinates.y.toFixed(2))}</span></span>
                                     </div>
                                     <div>
-                                        <span>
+                                        <span className="strong-class">
                                             Zero Position:
                                             <span className="text-class">
                                                 {watch('position')
-                                                    .replace(/_/g, ' ') // Replace underscores with spaces
-                                                    .replace(/\b\w/g, char => char.toUpperCase()) // Capitalize the first letter of each word
-                                                }
+                                                    ? watch('position')
+                                                        .replace(/_/g, ' ') // Replace underscores with spaces
+                                                        .replace(/\b\w/g, char => char.toUpperCase()) // Capitalize the first letter of each word
+                                                    : ''}
                                             </span>
                                         </span>
                                     </div>
@@ -325,9 +504,21 @@ const Dashboard = () => {
                                 <form onSubmit={handleSubmit(onSubmitParameters)} className="form-div">
                                     <div style={{ flexGrow: 1 }}>
                                         {/* Tool Section */}
-                                        <div className="row m-1 border border-2 right-div">
+                                        <div className="row m-1  right-div">
+                                            {/* <div className="d-flex align-center justify-content-center"></div> */}
                                             <div className="row p-1">
-                                                <div className="col-12 col-md-4 mb-1">
+                                                <div className="col-12 col-md-3 mb-1">
+                                                    <div className="d-flex flex-column">
+                                                        <label className="mb-1" style={{ whiteSpace: 'nowrap' }}>
+                                                            <strong>Design Name</strong>
+                                                        </label>
+                                                        <input
+                                                            value={watch('design_name')}
+                                                            style={{fontSize:"12px"}}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="col-12 col-md-3 mb-1">
                                                     <div className="d-flex flex-column">
                                                         <label className="mb-1" style={{ whiteSpace: 'nowrap' }}>
                                                             <strong>Tool Diameter</strong>
@@ -340,7 +531,7 @@ const Dashboard = () => {
                                                         />
                                                     </div>
                                                 </div>
-                                                <div className="col-12 col-md-4 mb-1">
+                                                <div className="col-12 col-md-3 mb-1">
                                                     <div className="d-flex flex-column">
                                                         <label className="mb-1" style={{ whiteSpace: 'nowrap' }}>
                                                             <strong>Tool Angle</strong>
@@ -353,7 +544,7 @@ const Dashboard = () => {
                                                         />
                                                     </div>
                                                 </div>
-                                                <div className="col-12 col-md-4 mb-1">
+                                                <div className="col-12 col-md-3 mb-1">
                                                     <div className="d-flex flex-column">
                                                         <label className="mb-1" style={{ whiteSpace: 'nowrap' }}>
                                                             <strong>X-Margin</strong>
@@ -371,13 +562,36 @@ const Dashboard = () => {
                                         </div>
                                         {/* Multipass Parameters */}
                                         <div className="row m-1">
-                                            <div className="d-flex align-items-center multilayer ">
-                                                <h6 className="mb-0 title-lable">MultiLayer</h6>
-                                                <button type="button" style={{ border: '1px solid transparent', backgroundColor: 'transparent' }}
-                                                    onClick={addColumn}
-                                                >
-                                                    <Components.Icons.Add fontSize="small" />
-                                                </button>
+                                            <div className="d-flex justify-content-between align-items-center multilayer">
+                                                {/* First div with h6 and button */}
+                                                <div className="d-flex justify-content-start align-items-center">
+                                                    <h6 className="mb-0 title-label ">MultiLayer</h6>
+                                                    <button
+                                                        type="button"
+                                                        style={{ border: '1px solid transparent', backgroundColor: 'transparent' }}
+                                                        onClick={addColumn}
+                                                    >
+                                                        <Components.Icons.Add fontSize="small" />
+                                                    </button>
+                                                </div>
+
+                                                {/* Second div with Update button */}
+                                                <div className="d-flex justify-content-end align-items-center">
+                                                    <button
+                                                        type="button"
+                                                        style={{
+                                                            fontWeight: 'bold',
+                                                            backgroundColor: 'transparent',
+                                                            border: 'none',   // Remove border
+                                                            color: 'black',   // Set text color
+                                                            padding: '5px 10px',  // Add padding for better spacing
+                                                            cursor: 'pointer'  // Change cursor to pointer for better UX
+                                                        }}
+                                                        onClick={handleUpdateDesign} // Make sure to replace with your actual update handler
+                                                    >
+                                                        Save
+                                                    </button>
+                                                </div>
                                             </div>
                                             <div className="d-flex flex-column">
                                                 <div className="d-flex">
@@ -574,15 +788,15 @@ const Dashboard = () => {
                     )}
 
                     {activeTab === 'turning' && (
-                     
-                            <TurningPage/>
-                    
+
+                        <TurningPage />
+
                     )}
 
                     {activeTab === 'design' && (
-                    
-                            <DesignPage/>
-                        )}
+
+                        <DesignPage />
+                    )}
                 </div>
 
             </div>

@@ -12,3 +12,13 @@ export const create_patterns = (data) => {
 export const get_single_pattern = (id) => { 
   return instance.get(`/dull/patterns/${id}/`);
 };
+export const create_design = (data) => { 
+  return instance.post(`/dull/design/`,data);
+};
+
+export const get_designs = () => { 
+  return instance.get(`/dull/design/`);
+};
+export const update_design = (id,data) => { 
+  return instance.put(`/dull/design/${id}/`,data);
+};

@@ -11,8 +11,9 @@ const NewModel = ({ open, onClose, onSubmit }) => {
   const [canvasSize, setCanvasSize] = useState({ width: 400, height: 400 });
   const [lastUpdated, setLastUpdated] = useState(null); // Track which field was last updated
 
-  const { register, handleSubmit, watch, setValue, reset, control } = useForm({
+  const { register, handleSubmit, watch, setValue, reset, control, formState: { errors } } = useForm({
     defaultValues: {
+      design_name: "",
       diameter: 63.64,
       width: 20,
       height: 200,
@@ -127,7 +128,12 @@ const NewModel = ({ open, onClose, onSubmit }) => {
   };
 
   useEffect(() => {
-    const canvas = canvasRef.current;
+    // const defaultCanvasValue = document.createElement('canvas');
+    // defaultCanvasValue.width = 400; // Set your desired width
+    // defaultCanvasValue.height = 400; // Set your desired height
+
+    // const canvas = canvasRef.current || defaultCanvasValue;
+    const canvas = canvasRef.current
     
     if (!canvas) return;
 
@@ -140,7 +146,6 @@ const NewModel = ({ open, onClose, onSubmit }) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const formValues = watch();
-    console.log(formValues);
     
     const width = Number(formValues.width) || 0;
     const height = Number(formValues.height) || 0;
@@ -151,7 +156,9 @@ const NewModel = ({ open, onClose, onSubmit }) => {
 
     ctx.strokeStyle = "#fff";
     ctx.lineWidth = thickness;
+    
     ctx.beginPath();
+    console.log(rectX,rectY,width, height);
     ctx.rect(rectX, rectY, width, height);
     ctx.stroke();
 
@@ -160,10 +167,11 @@ const NewModel = ({ open, onClose, onSubmit }) => {
       drawPositionIndicator(ctx, pos.x, pos.y);
     }
   }, [watch(), center]);
-
+  
   const onSubmitForm = (data) => {
     onSubmit(data);
   };
+  
   useEffect(() => {
     if (!open) {
       // Reset form to default values
@@ -198,6 +206,20 @@ const NewModel = ({ open, onClose, onSubmit }) => {
           {" "}
           {/* Adjust column width */}
           <Components.DialogContent dividers>
+            <div>
+            <Components.TextField
+                label="Design Name"
+                value={watch("design_name")}
+                // onChange={handleDiameterChange}
+                // type="number"
+                // fullWidth
+                variant="standard"
+                sx={{ marginBottom: "8px" }}
+                {...register("design_name", { required: true })}
+                error={!!errors.design_name}
+                helperText={errors.design_name ? "Design Name is required" : ""}
+              />            
+              </div>
             {/* Type selection */}
             <Components.Box mb={2}>
               <Components.Typography
@@ -366,7 +388,7 @@ const NewModel = ({ open, onClose, onSubmit }) => {
           {" "}
           <Components.DialogContent dividers>
             <div className="bg-black d-flex justify-content-center">
-              <canvas ref={canvasRef} width={500} height={400} />
+              <canvas ref={canvasRef} width={canvasSize.width} height={canvasSize.height} />
             </div>
             <Components.Box>
               <Components.Typography

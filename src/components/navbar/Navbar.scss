@@ -10,12 +10,13 @@ header {
 
 .navbar {
   width: 100%;
-  background-color: #fff;
-  height: 50px;
+  background-color: root.$white;
+  height: 35px;
   padding: 0px 10px;
   margin: auto;
   display: flex;
   // margin-bottom: 5px;
+  border-bottom: 2px solid lightgray;
   justify-content: space-between;
   @media (max-width: 1200px) {
     padding: 0px 10px;
@@ -40,8 +41,9 @@ a {
 
 .navbar .nav-links-container {
   display: flex;
-  gap: 2rem;
-  margin: auto;
+  // gap: 2rem;
+  // margin: auto;
+
 }
 
 .account_icon {
@@ -74,10 +76,11 @@ a {
   padding: 5px 5px;
   text-transform: capitalize !important;
   font-weight: bold;
-  color: #333;
+  color: root.$black;
   text-decoration: none;
   transition: color 0.3s ease-in-out;
-  font-size: 16px;
+  font-size: 14px;
+
 }
 
 /* Apply hover effect to the main navigation link */
@@ -160,11 +163,12 @@ a {
   width: 350px !important;
 }
 
-.nav-link.active {
-  color: #000;
-  // background: #3e667a;
-  border-radius: 5px;
-}
+// .nav-link.active {
+//   color: #000;
+//   // background: #3e667a;
+//   border-radius: 5px;
+  
+// }
 
 .sub-sub-li-items {
   display: none; /* Hide sub-sub-items by default */

@@ -1,6 +1,6 @@
 export const environment = {
-    // production: false,
-    production: true,
+    production: false,
+    // production: true,
 
     baseurl:'http://camcadbeta-api.prismtechs.in',
     // baseurl:'http://15.2.2.254:8888',

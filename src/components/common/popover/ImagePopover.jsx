@@ -20,7 +20,7 @@ const ImagePopover = ({ dataItem, index,onImageClick  }) => {
     const open = Boolean(anchorEl);    
     return (
 
-        <div className="col-12 col-sm-3 mb-4" key={index}>
+        <div className="col-12 col-sm-3 mb-2 " key={index}>
             {dataItem.attach && (
                 <div className="text-center">
                     <button

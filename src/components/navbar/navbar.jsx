@@ -227,6 +227,7 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
             .catch(error => {
                 console.error("Error saving pattern:", error);
             });
+            handleSaveAsCloseModal();
     }
 
     const navItems = [

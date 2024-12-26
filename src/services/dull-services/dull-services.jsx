@@ -22,3 +22,14 @@ export const get_designs = () => {
 export const update_design = (id,data) => { 
   return instance.put(`/dull/design/${id}/`,data);
 };
+export const get_single_design = (id) => { 
+  return instance.put(`/dull/design/${id}/`);
+};
+export const download_stp_file = (id) => {
+  return instance.get(`/dull/download-stp/?dullid=${id}/`, {
+    responseType: 'blob',
+    headers: {
+        'Accept': '*/*',   
+    }
+  });
+};

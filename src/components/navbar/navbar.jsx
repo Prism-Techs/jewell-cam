@@ -1,4 +1,4 @@
-import React, { useRef ,useState } from 'react';
+import React, { useRef, useState } from 'react';
 import './Navbar.scss'; // Import the updated SCSS file
 import style from './navbar.module.scss';
 import { Link, NavLink, useNavigate } from "react-router-dom";
@@ -6,14 +6,14 @@ import NewfileModal from '../models/newfilemodel/newfilemodel'; // Ensure this c
 import { useMediaQuery, useTheme } from '@mui/material';
 import Components from '../../theme/master-file-material';
 // import logo from '../../../public/assets/img/vekaria_logo.png';
-import { getUserDetails, LoggedOut} from "../../services/authenticate";
+import { getUserDetails, LoggedOut } from "../../services/authenticate";
 import FileCreator from '../common/FileCreator/fileCreate';
 import MachineSettingModel from '../models/MachineSettingModel/machine-setting-model';
-import { create_patterns} from '../../services/dull-services/dull-services';
+import { create_patterns,download_stp_file,create_design } from '../../services/dull-services/dull-services';
 import DesignModel from '../models/DesignModel/design-model';
-import { create_design } from '../../services/dull-services/dull-services';
 import { toast } from 'react-toastify';
-const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,DullIdGet , updateDesignData}) => {
+import ToolLibraryModel from '../models/ToolLibraryModel/tool-library-model';
+const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab, DullIdGet, updateDesignData }) => {
     const navigate = useNavigate();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [drawer, setDrawer] = useState(false);
@@ -23,8 +23,11 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
     const [isSaveAsModel, setisSaveAsModel] = useState(false)
     const [patternName, setPatternName] = useState('');
     const [designname, setDesignName] = useState('');
+    const [hoveredIndex, setHoveredIndex] = useState(null);
+    const [isToolDialogOpen, setIsToolDialogOpen] = useState(false);
 
-    const handleMachineSettingModelOpen= (e) => {
+
+    const handleMachineSettingModelOpen = (e) => {
         e.preventDefault();
         setIsMachineSettingModel(true);
     };
@@ -41,7 +44,7 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
     const handleTurning = () => {
         setActiveTab('turning')
     }
-    
+
     const handleDesign = () => {
         setActiveTab('design')
     }
@@ -52,6 +55,7 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
     const handleDesignModelOpen = () => {
         setDesignModel(true);
     };
+
     const handleDesignModelClose = () => {
         setDesignModel(false);
     };
@@ -65,7 +69,7 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
                 const text = e.target.result;
                 try {
                     const jsonData = JSON.parse(text);  // Parse the JSON data
-    
+
                     // Check if 'bangle_width' key exists
                     if (jsonData.hasOwnProperty('bangle_width')) {
                         setOpenFileData(jsonData);  // Set the parsed data if valid
@@ -115,25 +119,25 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
     };
 
     //save pattern in library
-    const handleSaveToLibrary = () => {      
+    const handleSaveToLibrary = () => {
         console.log(dashboardData);
-          
+
         if (!dashboardData) {
             console.error("No dashboard data to save");
             return;
         }
-    
-        const dullid = DullIdGet; 
-        let pattern_name = patternName; 
-    
+
+        const dullid = DullIdGet;
+        let pattern_name = patternName;
+
         pattern_name = pattern_name.replace(/\s+/g, ''); // This removes all spaces
-        
+
         const formattedDataUrl = `data:image/png,name:${pattern_name}.png;base64,${dashboardData.canvas_img}`;
-        const attach= [formattedDataUrl]
-        const multipass= dashboardData.multipass
-        const tool_dia= dashboardData.tool_dia
-        const tool_v_angle= dashboardData.tool_v_angle
-        const xmargin= dashboardData.xmargin
+        const attach = [formattedDataUrl]
+        const multipass = dashboardData.multipass
+        const tool_dia = dashboardData.tool_dia
+        const tool_v_angle = dashboardData.tool_v_angle
+        const xmargin = dashboardData.xmargin
 
         const postData = {
             pattern_name,
@@ -142,9 +146,9 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
             attach,
             tool_dia,
             tool_v_angle,
-            xmargin    
+            xmargin
         };
-    
+
         create_patterns(postData)
             .then(response => {
                 console.log("Pattern saved successfully:", response);
@@ -159,7 +163,7 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
 
     const handleSaveFile = () => {
         console.log(dashboardData);
-        
+
         const content = JSON.stringify(dashboardData, null, 2); // Convert the object to a pretty-printed JSON string
         const blob = new Blob([content], { type: "text/plain" });
         const link = document.createElement("a");
@@ -169,17 +173,58 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
     }
 
     const fileCreatorRef = useRef(null);
-  
+
     const handleCreateFile = () => {
-      if (fileCreatorRef.current) {
-        fileCreatorRef.current.createFile();
-      }
+        const currentUrl = new URL(window.location.href);
+        const searchParams = new URLSearchParams(currentUrl.search);
+        const designId = searchParams.get('design');  // Extract design_id from URL
+        download_stp_file(designId)
+        .then(response => {
+            console.log(response);
+            
+            const blob = new Blob([response.data], { 
+                type: 'application/octet-stream' 
+            });
+            
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            
+            a.download = 'Dull Test 24 Dec.stp';
+            
+            document.body.appendChild(a);
+            a.click();
+            
+            window.URL.revokeObjectURL(url);
+            a.remove();
+        })
+        .catch(error => {
+            console.error("Error downloading file:", error);
+            if (error.response?.status === 401) {
+                alert('Authentication failed. Please login again.');
+                // Redirect to login or handle token expiry
+            } else if (error.response?.status === 406) {
+                alert('File format not supported.');
+            } else {
+                // alert('Failed to download the file. Please try again.');
+                toast.warning("Please Select design For generate STP file", {
+                    position: "top-right",
+                    autoClose: 2500,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: false,
+                    draggable: false,
+                    progress: undefined,
+                    theme: "colored",
+                })
+            }
+        });
     };
 
     const handleSaveAsDesign = () => {
-            
+
         const formData = dashboardData
-        let Design_Name = designname; 
+        let Design_Name = designname;
 
         Design_Name = Design_Name.replace(/\s+/g, ''); // This removes all spaces
         const formattedDataUrl = `data:image/png,name:${Design_Name}.png;base64,${formData.canvas_img}`;
@@ -187,15 +232,15 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
         const updatedata = {
             ...restOfDashboardData,
             design_name: designname,
-            attach:[formattedDataUrl],
-            
+            attach: [formattedDataUrl],
+
         }
         console.log(updatedata);
-        
+
         create_design(updatedata)
             .then(response => {
                 const data = response.data;
-            
+
                 const encryptedKey = data.design_id;
 
                 const currentUrl = new URL(window.location.href);
@@ -227,8 +272,11 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
             .catch(error => {
                 console.error("Error saving pattern:", error);
             });
-            handleSaveAsCloseModal();
+        handleSaveAsCloseModal();
     }
+
+    const openToolDialog = () => setIsToolDialogOpen(true);
+    const closeToolDialog = () => setIsToolDialogOpen(false);
 
     const navItems = [
         {
@@ -251,7 +299,7 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
                 {
                     name: 'Save As',
                     onClick: handleSaveAsOpenModal,
-                    
+
                 },
                 {
                     name: 'Add to Pattern Library',
@@ -302,12 +350,13 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
         //     child: [],
         // },
         {
-            name: 'Tool Path',
+            name: 'Tool path',
             permission: true,
             isExpandable: true,
             child: [
                 {
                     name: 'Tool Library',
+                    onClick: openToolDialog
                 },
                 {
                     name: 'Generate Code',
@@ -331,7 +380,7 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
         //     child: [],
         // },
         {
-            name: 'Object Type',
+            name: 'Object type',
             permission: true,
             isExpandable: true,
             child: [
@@ -354,13 +403,13 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
         },
 
         {
-            name: 'Machine Setup',
+            name: 'Machine setup',
             permission: true,
             isExpandable: true,
             child: [
                 {
                     name: 'Machine Setting',
-                    onClick:handleMachineSettingModelOpen
+                    onClick: handleMachineSettingModelOpen
                 },
                 {
                     name: 'Post Processor',
@@ -368,7 +417,6 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
             ],
         },
     ];
-
 
     const handleModelSubmit = (dimensions) => {
         onCreateNewFile(dimensions);
@@ -384,122 +432,58 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
         updateDesignData(designData)
     };
 
+    const handleMouseEnter = (index) => {
+        setHoveredIndex(index);
+    };
+
+    const handleMouseLeave = () => {
+        setHoveredIndex(null);
+    };
+
     return (
         <header>
-            <nav >
-                <div className="navbar">
-                    <div className="logo-container d-flex align-items-center" style={{margin:"0px 0px 25px 0px"}}>
+            <nav>
+                <div className="main-nav d-flex justify-content-between">
+                    <div className="child-div-logo">
                         <NavLink to={'/dashboard'} className={`${style.company_name} text-primary`}>
                             <img src={'assets/img/vekaria_logo.png'} alt="Vekaria" className={`${style.imgClass}`} />
                         </NavLink>
+                 
                     </div>
+                    <div className="child-div-1">
+                        {navItems.map((item, index) => (
+                            <div
+                                key={index}
+                                className="nav-item"
+                                onMouseEnter={() => handleMouseEnter(index)}
+                                onMouseLeave={handleMouseLeave}
+                            >
+                                <div className="main-item">{item.name}</div>
 
-                    {!isMatch ? (
-                        <div className="nav-links-container">
-                            <ul className="d-flex p-0 dropdown">
-                                {navItems.map((item, index) =>
-                                    item.permission && item.isExpandable ? (
-                                        <li key={index} className="li-items">
-                                            <div className="nav-link py-1 px-2">{item.name}</div>
-                                            {item.child && (
-                                                <ul className="sub-menu">
-                                                    {item.child.map((childItem, childIndex) => (
-                                                        <li key={childIndex} className="sub-li-items">
-                                                            {childItem.onClick ? (
-                                                                <div
-                                                                    className="nav-link"
-                                                                    style={{ fontSize: '14px', cursor: 'pointer', color: '#000' }}
-                                                                    onClick={childItem.onClick}
-                                                                >
-                                                                    {childItem.name}
-                                                                </div>
-                                                            ) : (
-                                                                <NavLink
-                                                                    style={{ fontSize: '14px' }}
-                                                                    to={childItem.route}
-                                                                    className="nav-link"
-                                                                >
-                                                                    <div className="d-flex justify-content-between">
-                                                                        {childItem.name}
-                                                                        {childItem?.child ? (
-                                                                            <Components.Icons.ArrowForwardIosRounded fontSize="5" />
-                                                                        ) : null}
-                                                                    </div>
-                                                                </NavLink>
-                                                            )}
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            )}
-                                        </li>
-                                    ) : item.permission && !item.isExpandable ? (
-                                        <NavLink
-                                            to={item.route}
-                                            className="nav-link py-2 px-3"
-                                            key={index}
-                                        >
-                                            <li className="li-items">{item.name}</li>
-                                        </NavLink>
-                                    ) : null
+                                {/* Show child items on hover */}
+                                {hoveredIndex === index && item.child && item.child.length > 0 && (
+                                    <div className="dropdown-menu">
+                                        {item.child.map((child, childIndex) => (
+                                            <div
+                                                key={childIndex}
+                                                className="dropdown-item"
+                                                onClick={child.onClick}
+                                            >
+                                                {child.name}
+                                            </div>
+                                        ))}
+                                    </div>
                                 )}
-                            </ul>
-                        </div>
+                            </div>
+                        ))}
 
-                    ) : (
-                        <></>
-                    )}
+                    </div>
+                    <div className="child-div-2">
 
-                    {isMatch ? (
-                        <div className="menu-icon-container">
-                            <Components.IconButton onClick={() => setDrawer(!drawer)}>
-                                <Components.Icons.MenuOutlined className="fs-2 text-dark" />
-                            </Components.IconButton>
-                        </div>
-                    ) : (
-                        <></>
-                    )}
-
-                    <Components.Drawer open={drawer} onClose={() => setDrawer(false)}>
-                        <ul className="mb-0 p-0 dropdown dropend">
-                            {navItems.map((item, index) =>
-                                item.permission ? (
-                                    <Components.ListItem key={index} disablePadding className="li-items-drawer">
-                                        {item.isExpandable ? (
-                                            <>
-                                                <Components.ListItemButton>
-                                                    <NavLink to={item.route} className="nav-link dropdown-toggle">
-                                                        {item.name}
-                                                    </NavLink>
-                                                </Components.ListItemButton>
-                                                {item.child && (
-                                                    <ul className="sub-menu-drawer p-0">
-                                                        {item.child.map((childItem, childIndex) => (
-                                                            <Components.ListItem key={childIndex} disablePadding>
-                                                                <Components.ListItemButton>
-                                                                    <NavLink to={childItem.route}>{childItem.name}</NavLink>
-                                                                </Components.ListItemButton>
-                                                            </Components.ListItem>
-                                                        ))}
-                                                    </ul>
-                                                )}
-                                            </>
-                                        ) : (
-                                            <Components.ListItemButton>
-                                                <NavLink to={item.route} className="nav-link">
-                                                    {item.name}
-                                                </NavLink>
-                                            </Components.ListItemButton>
-                                        )}
-                                    </Components.ListItem>
-                                ) : null
-                            )}
-                        </ul>
-                    </Components.Drawer>
-                    <div className="d-flex justify-content-center">
-
+                        
                     <Components.Tooltip title="Logout" arrow>
                             <Link >
-                                <Components.IconButton sx={{margin:"0px 0px 15px 0px"}}>
+                                <Components.IconButton>
                                     <Components.Icons.AccountCircle className=" text-black " />
                                 </Components.IconButton>
                             </Link>
@@ -507,15 +491,15 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
                  
                     <Components.Tooltip title="Logout" arrow>
                             <Link to={"/auth"} replace onClick={() => LoggedOut(navigate)}>
-                                <Components.IconButton sx={{margin:"0px 0px 15px 0px"}}>
+                                <Components.IconButton>
                                     <Components.Icons.Logout className=" text-black " />
                                 </Components.IconButton>
                             </Link>
                     </Components.Tooltip>
                     </div>
-                    
                 </div>
             </nav>
+
 
             <Components.Dialog open={isConfirmModalOpen} onClose={handleConfirmCloseModal} >
                 {/* <Components.DialogTitle>{<b>Confirm</b>}</Components.DialogTitle> */}
@@ -607,7 +591,8 @@ const Navbar = ({ onCreateNewFile, dashboardData, setOpenFileData, setActiveTab,
             <NewfileModal open={isModalOpen} onClose={handleNewFileCloseModal} onSubmit={handleModelSubmit} />
             <MachineSettingModel open={isMachineSettingModel} onClose={handleMachineSettingModelClose} />
             <FileCreator ref={fileCreatorRef} dashboardData={dashboardData} />
-            <DesignModel open={isDesignModel} onClose={handleDesignModelClose} onDesignSelect={handleDesignSelect}/>
+            <DesignModel open={isDesignModel} onClose={handleDesignModelClose} onDesignSelect={handleDesignSelect} />
+            <ToolLibraryModel open={isToolDialogOpen} onClose={closeToolDialog} />
             <input
                 type="file"
                 ref={fileInputRef}

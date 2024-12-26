@@ -1,21 +1,22 @@
 import React, { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 
 const FileCreator = forwardRef(({ dashboardData }, ref) => {   
-    const [fileContent, setFileContent] = useState(() => {
-        return localStorage.getItem("fileContent") || "Initial content\n";
-    });
+    const [fileContent, setFileContent] = useState([]);
 
     useEffect(() => {
         if (dashboardData) {
-        const newContent = JSON.stringify(dashboardData, null, 2);
-        setFileContent(newContent);
+            const { canvas_img, ...restOfDashboardData } = dashboardData;
+            const updatedata = {
+                ...restOfDashboardData,
+                design_name: dashboardData.design_name,   
+            }
+            
+            const formattedContent = `A ${dashboardData.design_name} - 22-12-2024\n`;
+            setFileContent(formattedContent);
+        // const newContent = JSON.stringify(updatedata, null, 2);
+        // setFileContent(newContent);
         }
     }, [dashboardData]);
-
-
-    useEffect(() => {
-        localStorage.setItem("fileContent", fileContent);
-    }, [fileContent]);
 
 
     const appendDataToFile = (newData) => {
@@ -28,7 +29,7 @@ const FileCreator = forwardRef(({ dashboardData }, ref) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "myFile.txt";
+        a.download = "myFile.stp";
         a.click();
         window.URL.revokeObjectURL(url);
         setFileContent("");

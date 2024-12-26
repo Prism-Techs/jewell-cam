@@ -10,9 +10,9 @@ import CurveCanvasComponent from "../../components/common/CurveCanvas/canvas_cur
 import Box2 from "../../components/common/box2/box2";
 import TurningPage from "../../components/common/TurningPage/Turning";
 import DesignPage from "../../components/common/DesignPage/design";
-import { get_single_pattern, create_design, update_design } from "../../services/dull-services/dull-services";
+import { get_single_pattern, create_design, update_design, get_single_design } from "../../services/dull-services/dull-services";
+import { get_tool_library } from "../../services/tool-services/tool-services";
 import { toast } from "react-toastify";
-import { Component } from "lucide-react";
 const Dashboard = () => {
     const [isOpenColorModel, setOpColorModel] = useState(false);
     const [selectedColorName, setSelectedColorName] = useState(null);
@@ -24,7 +24,11 @@ const Dashboard = () => {
     const [activeTab, setActiveTab] = useState('background');
     const [activeIcon, setActiveIcon] = useState('Wall');
     const [selectedDullId, setSelectedDullId] = useState(null); // State to hold the dull_id
-    const [storedData, setStoredData] = useState([])
+    const [DesignMasterId, setDesignMasterId] = useState([])
+    const [ToolLibraryData, setToolLibraryData] = useState([])
+    const [tabs, setTabs] = useState([]);
+    const [anchorEl, setAnchorEl] = useState(null);
+    const isPopoverOpen = Boolean(anchorEl);
 
     const colorMapping = [
         { name: "Golden", light: "#e8dca2", dark: "#bca323" },
@@ -35,9 +39,10 @@ const Dashboard = () => {
         { name: "Grey", light: "#e6e1eb", dark: "#7a757d" },
     ];
 
-    const [anchorEl, setAnchorEl] = useState(null);
-
     const handleOpenColorPopover = (event, index) => {
+        event.preventDefault();
+        console.log(event.currentTarget);
+        
         setAnchorEl(event.currentTarget); // Set anchor for the popover
         setSelectedColumnId(index); // Set the selected color index
     };
@@ -45,10 +50,6 @@ const Dashboard = () => {
     const handleCloseColorPopover = () => {
         setAnchorEl(null);
     };
-
-    const isPopoverOpen = Boolean(anchorEl); // Check if the popover is open
-
-    const [tabs, setTabs] = useState([]);
 
     const {
         register,
@@ -73,9 +74,11 @@ const Dashboard = () => {
             canvas_img: canvasImg,
             dull_type: "",
             xmargin: 2,
+            no_of_tool: 0,
             multipass: [
                 {
                     id: 0,
+                    tool_id: '',
                     xpitch: 4,
                     no_of_cuts: 50,
                     cut_depth: 0.1,
@@ -127,14 +130,21 @@ const Dashboard = () => {
         }
     }, [canvasImg, setValue]);
 
-    const onSubmitParameters = (data) => {
-    };
+    useEffect(() => {
+        const currentUrl = new URL(window.location.href);
+        const searchParams = new URLSearchParams(currentUrl.search);
+        const designId = searchParams.get('design');  // Extract design_id from URL
+        setDesignMasterId(designId);
+    })
+
+    // const onSubmitParameters = (data) => {
+    // };
 
     const handleModelSubmit = (data) => {
-        
+
         const formData = watch();
-        let pattern_name = formData.design_name; 
-    
+        let pattern_name = formData.design_name;
+
         pattern_name = pattern_name.replace(/\s+/g, ''); // This removes all spaces
         const formattedDataUrl = `data:image/png,name:${pattern_name}.png;base64,${formData.canvas_img}`;
         const updatedata = {
@@ -144,10 +154,11 @@ const Dashboard = () => {
             bangle_width: data.width,
             bangle_diameter: data.diameter,
             bangle_height: data.height,
-            attach:[formattedDataUrl],
+            attach: [formattedDataUrl],
             multipass: [
                 {
                     id: 0,
+                    tool_id:'',
                     xpitch: 4,
                     no_of_cuts: 50,
                     cut_depth: 0.1,
@@ -167,7 +178,6 @@ const Dashboard = () => {
                 },
             ],
         }
-        console.log(updatedata);
         create_design(updatedata)
             .then(response => {
                 const data = response.data;
@@ -183,9 +193,11 @@ const Dashboard = () => {
                     position: data.position || '',
                     tool_dia: 10,
                     tool_v_angle: 120,
+                    no_of_tool: data.no_of_tool || '',
                     multipass: [
                         {
                             id: 0,
+                            tool_id:'',
                             xpitch: 4,
                             no_of_cuts: 50,
                             cut_depth: 0.1,
@@ -206,7 +218,7 @@ const Dashboard = () => {
                     ],
                 });
                 // Get the encrypted key (in this case, design_id)
-                const encryptedKey = data.design_id;
+                const encryptedKey = data.design_eid;
 
                 // Get current URL
                 const currentUrl = new URL(window.location.href);
@@ -215,12 +227,12 @@ const Dashboard = () => {
                 const searchParams = new URLSearchParams(currentUrl.search);
 
                 // Remove existing 'design_id' parameter if present
-                if (searchParams.has('design_id')) {
-                    searchParams.delete('design_id');
+                if (searchParams.has('design')) {
+                    searchParams.delete('design');
                 }
 
                 // Add the new 'design_id' to the query string
-                searchParams.append('design_id', encryptedKey);
+                searchParams.append('design', encryptedKey);
 
                 // Update the URL without reloading the page
                 const newUrl = `${currentUrl.pathname}?${searchParams.toString()}`;
@@ -241,13 +253,14 @@ const Dashboard = () => {
                 console.error("Error saving pattern:", error);
             });
     };
-    
+
     const handleUpdateDesign = () => {
         const currentUrl = new URL(window.location.href);
         const searchParams = new URLSearchParams(currentUrl.search);
-        const designId = searchParams.get('design_id');  // Extract design_id from URL
+        const designId = searchParams.get('design');  // Extract design_id from URL
+        setDesignMasterId(designId);
         if (!designId) {
-            toast.error("Design ID not found in the URL", {
+            toast.error("Please Select Or Create Design First", {
                 position: "top-right",
                 autoClose: 2500,
                 hideProgressBar: false,
@@ -259,11 +272,11 @@ const Dashboard = () => {
             });
             return;  // Exit if design_id is not present in the URL
         }
-    
+
         // Get specific keys from the form state using watch()
-        const formData = watch();
-        let pattern_name = formData.design_name; 
-    
+        const formData = watch();       
+        let pattern_name = formData.design_name;
+
         pattern_name = pattern_name.replace(/\s+/g, ''); // This removes all spaces
         const formattedDataUrl = `data:image/png,name:${pattern_name}.png;base64,${formData.canvas_img}`;
         const updatedData = {
@@ -272,14 +285,16 @@ const Dashboard = () => {
             design_name: formData.design_name,
             position: formData.position,
             dull_type: activeIcon,
+            no_of_tool: formData.no_of_tool,
             tool_v_angle: parseInt(formData.tool_v_angle),
             xmargin: formData.xmargin,
             multipass: formData.multipass,
-            attach:[formattedDataUrl]
+            attach: [formattedDataUrl]
         };
         console.log(updatedData);
         
-        update_design(designId,updatedData)
+
+        update_design(designId, updatedData)
             .then(response => {
                 const data = response.data;
                 toast.success("Design update successfully", {
@@ -301,6 +316,7 @@ const Dashboard = () => {
     const addColumn = () => {
         append({
             id: fields.length + 1,  // Assign id based on current number of fields
+            tool_id: '',
             xpitch: 4,
             // xmargin: 2,
             no_of_cuts: 50,
@@ -329,8 +345,9 @@ const Dashboard = () => {
     const formData = watch();
 
     const handleDullIdSelect = (dull_id, dull_type) => {
-        console.log(dull_type);
         setActiveIcon(dull_type)
+        console.log();
+
         setValue('pattern_type', dull_type);
         setSelectedDullId(dull_id);
     };
@@ -374,9 +391,9 @@ const Dashboard = () => {
     };
 
     const handleUploadDesign = (data) => {
-        console.log(data);   
+        console.log(data);
         // Get the encrypted key (in this case, design_id)
-        const encryptedKey = data.design_id;
+        const encryptedKey = data.design_eid;
 
         // Get current URL
         const currentUrl = new URL(window.location.href);
@@ -390,13 +407,13 @@ const Dashboard = () => {
         }
 
         // Add the new 'design_id' to the query string
-        searchParams.append('design_id', encryptedKey);
+        searchParams.append('design', encryptedKey);
 
         // Update the URL without reloading the page
         const newUrl = `${currentUrl.pathname}?${searchParams.toString()}`;
         window.history.pushState({ path: newUrl }, '', newUrl);
         reset({
-            design_id: data.design_id || "",
+            design_id: data.design_eid || "",
             design_name: data.design_name || "",
             bangle_width: data.bangle_width || '',
             bangle_diameter: data.bangle_diameter || '',
@@ -405,7 +422,8 @@ const Dashboard = () => {
             position: data.position || '',
             tool_dia: data.tool_dia || 10,
             tool_v_angle: data.tool_v_angle || 120,
-            multipass:data.multipass || 
+            no_of_tool: data.no_of_tool || 0,
+            multipass: data.multipass ||
                 [
                     {
                         id: 0,
@@ -425,15 +443,29 @@ const Dashboard = () => {
                         part_y: "",
                         theme_color_light: "#e8dca2",
                         theme_color_dark: "#bca323"
-                    },         
+                    },
                 ]
         });
-      };
-      
+    };
+
+
+    useEffect(() => {
+        get_tool_library()
+            .then(response => {
+                // console.log(response);
+                setToolLibraryData(response.data);
+            })
+            .catch(error => {
+                toast.error("Failed to fetch Tool Data");
+            });
+
+    }, []);
+
+    // console.log(watch())
+
     return (
         <>
             <div className="main-container">
-
                 <Navbar
                     onCreateNewFile={handleModelSubmit}
                     updateDesignData={handleUploadDesign}
@@ -442,9 +474,6 @@ const Dashboard = () => {
                     setOpenFileData={setOpenFileData}
                     DullIdGet={selectedDullId}
                 ></Navbar>
-                    {/* <p className="d-flex align-center justify-content-center" style={{ margin: "0px 0" }}>
-                           <strong>{watch("design_name")}</strong> 
-                       </p> */}
                 <div className="content">
 
                     {activeTab === 'background' && (
@@ -462,6 +491,10 @@ const Dashboard = () => {
                                                     .replace(/\b\w/g, char => char.toUpperCase()) // Capitalize the first letter of each word
                                                 : ''}
                                         </span>
+                                    </label>
+                                    <label>
+                                        <strong className="strong-class">Design :</strong>
+                                        <span className="text-class">{watch('design_name')}</span>
                                     </label>
                                     <label>
                                         <strong className="strong-class">Width :</strong>
@@ -501,23 +534,21 @@ const Dashboard = () => {
                             </div>
 
                             <div className="box4">
-                                <form onSubmit={handleSubmit(onSubmitParameters)} className="form-div">
+                                <form onSubmit={handleSubmit} className="form-div">
                                     <div style={{ flexGrow: 1 }}>
-                                        {/* Tool Section */}
                                         <div className="row m-1  right-div">
-                                            {/* <div className="d-flex align-center justify-content-center"></div> */}
                                             <div className="row p-1">
-                                                <div className="col-12 col-md-3 mb-1">
+                                                {/* <div className="col-12 col-md-3 mb-1">
                                                     <div className="d-flex flex-column">
                                                         <label className="mb-1" style={{ whiteSpace: 'nowrap' }}>
                                                             <strong>Design Name</strong>
                                                         </label>
                                                         <input
                                                             value={watch('design_name')}
-                                                            style={{fontSize:"12px"}}
+                                                            style={{ fontSize: "12px" }}
                                                         />
                                                     </div>
-                                                </div>
+                                                </div> */}
                                                 <div className="col-12 col-md-3 mb-1">
                                                     <div className="d-flex flex-column">
                                                         <label className="mb-1" style={{ whiteSpace: 'nowrap' }}>
@@ -538,6 +569,19 @@ const Dashboard = () => {
                                                         </label>
                                                         <input
                                                             {...register("tool_v_angle")}
+                                                            type="number"
+                                                            //step="0.01"
+                                                            className="no-spinner"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="col-12 col-md-3 mb-1">
+                                                    <div className="d-flex flex-column">
+                                                        <label className="mb-1" style={{ whiteSpace: 'nowrap' }}>
+                                                            <strong>No Of Tools</strong>
+                                                        </label>
+                                                        <input
+                                                            {...register("no_of_tool")}
                                                             type="number"
                                                             //step="0.01"
                                                             className="no-spinner"
@@ -576,27 +620,30 @@ const Dashboard = () => {
                                                 </div>
 
                                                 {/* Second div with Update button */}
-                                                <div className="d-flex justify-content-end align-items-center">
-                                                    <button
-                                                        type="button"
-                                                        style={{
-                                                            fontWeight: 'bold',
-                                                            backgroundColor: 'transparent',
-                                                            border: 'none',   // Remove border
-                                                            color: 'black',   // Set text color
-                                                            padding: '5px 10px',  // Add padding for better spacing
-                                                            cursor: 'pointer'  // Change cursor to pointer for better UX
-                                                        }}
-                                                        onClick={handleUpdateDesign} // Make sure to replace with your actual update handler
-                                                    >
-                                                        Save
-                                                    </button>
-                                                </div>
+                                                {/* {DesignMasterId && ( */}
+                                                    <div className="d-flex justify-content-end align-items-center">
+                                                        <button
+                                                            type="button"
+                                                            style={{
+                                                                fontWeight: 'bold',
+                                                                backgroundColor: 'transparent',
+                                                                border: 'none',   // Remove border
+                                                                color: 'black',   // Set text color
+                                                                padding: '5px 10px',  // Add padding for better spacing
+                                                                cursor: 'pointer'  // Change cursor to pointer for better UX
+                                                            }}
+                                                            onClick={handleUpdateDesign} // Make sure to replace with your actual update handler
+                                                        >
+                                                            Save
+                                                        </button>
+                                                    </div>
+                                                {/* )} */}
                                             </div>
                                             <div className="d-flex flex-column">
                                                 <div className="d-flex">
                                                     <div className="col-auto label-column mt-4">
 
+                                                        <div className="parameters-div2"><label>Tool</label></div>
                                                         <div className="parameters-div2"><label>X Pitch</label></div>
                                                         {/* <div className="parameters-div2"><label>X Margin </label></div> */}
                                                         <div className="parameters-div2"><label>No. of Cuts (Y pitch)</label></div>
@@ -622,6 +669,7 @@ const Dashboard = () => {
                                                                         <button
                                                                             onClick={(event) => handleOpenColorPopover(event, index)}
                                                                             style={{ border: '1px solid transparent', backgroundColor: 'transparent' }}
+                                                                            type="button"
                                                                         >
                                                                             <Components.Icons.FormatColorFill
                                                                                 style={{
@@ -702,13 +750,18 @@ const Dashboard = () => {
                                                                     }
                                                                 </div>
                                                                 <div className="parameters-div">
+                                                                    <select {...register(`multipass[${index}].tool_id`)} className="dropdown-select">
+                                                                        <option value="">Select Tool</option>
+                                                                        {ToolLibraryData?.map((tool) => (
+                                                                            <option key={tool.tool_id} value={tool.tool_id}>
+                                                                                {tool.tool_name}
+                                                                            </option>
+                                                                        ))}
+                                                                    </select>
+                                                                </div>
+                                                                <div className="parameters-div">
                                                                     <input {...register(`multipass[${index}].xpitch`)} type="number" step="0.1" className="no-spinner" />
                                                                 </div>
-                                                                {/* <div className="parameters-div">
-                                                                    <input {...register(`xmargin`)}
-                                                                        disabled={index !== 0}
-                                                                        type="number" step="1" className="no-spinner" />
-                                                                </div> */}
                                                                 <div className="parameters-div">
                                                                     <input {...register(`multipass[${index}].no_of_cuts`)} type="number" className="no-spinner" />
                                                                 </div>

@@ -13,7 +13,7 @@ const CustomeButton = ({ text, onClick, ...props }) => {
                     backgroundColor: theme.palette.light_background // Lighter shade on hover
                 },
                 marginRight:"10px",
-                marginBottom:"10px"
+                marginBottom:"5px"
             }}
             {...props} // Spread any additional props
         >

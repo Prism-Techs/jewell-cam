@@ -1,0 +1,12 @@
+@use "../../../theme/scss/root.scss";
+
+.title-div{
+    border-bottom: 1px solid #e0e0e0;
+    background-color: root.$light_background; /* Assuming light_background is a custom CSS variable */
+    color: root.$black; /* Assuming black is a custom CSS variable */
+    font-size: 1.2rem;
+    font-weight: bold;
+    padding: 3px;
+    text-align: center;
+    height: 35px;
+}
